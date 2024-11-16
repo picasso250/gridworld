@@ -1,0 +1,11 @@
+[gd_scene load_steps=4 format=3 uid="uid://d3qq83blul04s"]
+
+[ext_resource type="Script" path="res://main.gd" id="1_pu17l"]
+[ext_resource type="Shader" path="res://random_color.gdshader" id="2_ah6y7"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yp5n2"]
+shader = ExtResource("2_ah6y7")
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_pu17l")
+shader = SubResource("ShaderMaterial_yp5n2")
