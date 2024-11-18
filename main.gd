@@ -50,17 +50,6 @@ func _ready():
 			add_child(sprite)
 			sprite_row.append(sprite)
 
-			# 创建并初始化标签
-			var label = Label.new()
-			var mass = row[x]["mass"]
-			label.text = str(round(mass))  # 显示四舍五入后的质量
-			label.set_size(cell_size)  # 标签尺寸与格子一致
-			label.align = HORIZONTAL_ALIGNMENT_CENTER
-			label.valign = VERTICAL_ALIGNMENT_CENTER
-			label.position = Vector2(x, y) * cell_size  # 对齐到网格位置
-			add_child(label)
-			label_row.append(label)
-
 		grid.append(row)
 		sprites.append(sprite_row)
 		labels.append(label_row)
@@ -136,24 +125,23 @@ func liquid_behavior(row, col):
 	if below_row >= grid_size.y:
 		return  # 底部边界
 
-	var gas1 = grid[row][col]
-	var gas2 = grid[below_row][col]
+	var current_cell = grid[row][col]
+	var below_cell = grid[below_row][col]
 
 	# 处理下方格子，如果下方有水且其质量不足
-	if gas2["type"] == "Water":
-		var target_cell = grid[below_row][col]
+	if below_cell["type"] == "Water":
 		var density_threshold = substance_densities["Water"]
-		var missing_mass = density_threshold - target_cell["mass"]
+		var missing_mass = density_threshold - below_cell["mass"]
 
 		if missing_mass > 0:
 			# 先填满正下方格子
-			var fill_mass = min(gas1["mass"], missing_mass)
-			target_cell["mass"] += fill_mass
-			gas1["mass"] -= fill_mass
+			var fill_mass = min(current_cell["mass"], missing_mass)
+			below_cell["mass"] += fill_mass
+			current_cell["mass"] -= fill_mass
 			missing_mass -= fill_mass
 
 	# 处理左右为水的情况，随机选择一个平分质量
-	elif gas2["type"] != "Water":
+	elif below_cell["type"] != "Water":
 		var left_col = col - 1
 		var right_col = col + 1
 		var gas_left = null
@@ -166,23 +154,23 @@ func liquid_behavior(row, col):
 
 		# 如果左右有水
 		if gas_left and gas_right and gas_left["type"] == "Water" and gas_right["type"] == "Water":
-			var total_mass = gas1["mass"] + gas_left["mass"] + gas_right["mass"]
+			var total_mass = current_cell["mass"] + gas_left["mass"] + gas_right["mass"]
 			var avg_mass = total_mass / 3
 			# 平分质量
-			gas1["mass"] = avg_mass
+			current_cell["mass"] = avg_mass
 			gas_left["mass"] = avg_mass
 			gas_right["mass"] = avg_mass
 		elif gas_left and gas_left["type"] == "Water":
-			var total_mass_left = gas1["mass"] + gas_left["mass"]
+			var total_mass_left = current_cell["mass"] + gas_left["mass"]
 			var avg_mass_left = total_mass_left / 2
 			# 平分质量
-			gas1["mass"] = avg_mass_left
+			current_cell["mass"] = avg_mass_left
 			gas_left["mass"] = avg_mass_left
 		elif gas_right and gas_right["type"] == "Water":
-			var total_mass_right = gas1["mass"] + gas_right["mass"]
+			var total_mass_right = current_cell["mass"] + gas_right["mass"]
 			var avg_mass_right = total_mass_right / 2
 			# 平分质量
-			gas1["mass"] = avg_mass_right
+			current_cell["mass"] = avg_mass_right
 			gas_right["mass"] = avg_mass_right
 
 	# 下方是气体，与其交换
@@ -190,9 +178,8 @@ func liquid_behavior(row, col):
 
 # 在 _physics_process 中应用液体行为
 func _physics_process(delta):
-	debug_grid()
 	# 随机选择 N 个格子并进行气体交换
-	var N = 8
+	var N = 1
 	for i in range(N):
 		var rand_row = randi() % grid_size.y
 		var rand_col = randi() % grid_size.x
@@ -223,4 +210,4 @@ func _physics_process(delta):
 			var sprite = sprites[y][x]
 			var label = labels[y][x]  # 获取对应的标签
 			sprite.material.set_shader_parameter("cell_color", color)
-			label.text = str(round(grid[y][x]["mass"]))  # 更新标签的质量
+			sprite.get_node("MarginContainer").get_node("Label").text = str(round(grid[y][x]["mass"]))  # 更新标签的质量
