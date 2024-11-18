@@ -1,0 +1,21 @@
+[gd_scene load_steps=6 format=3 uid="uid://bjw5s03tobmmc"]
+
+[ext_resource type="Script" path="res://node_2d.gd" id="1_5bcdm"]
+[ext_resource type="Shader" path="res://gas_color.gdshader" id="1_g4va4"]
+[ext_resource type="Texture2D" uid="uid://pwt82fq4ilg5" path="res://icon.svg" id="1_grj62"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8csxl"]
+shader = ExtResource("1_g4va4")
+shader_parameter/cell_color = null
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rlh71"]
+shader = ExtResource("1_g4va4")
+shader_parameter/cell_color = null
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_5bcdm")
+shader = SubResource("ShaderMaterial_8csxl")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_rlh71")
+texture = ExtResource("1_grj62")

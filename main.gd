@@ -1,6 +1,6 @@
 extends Node2D
 
-@export var grid_size: Vector2i = Vector2i(11, 11)  # n x m 格子数量
+@export var grid_size: Vector2i = Vector2i(11,11)  # n x m 格子数量
 @export var cell_size: Vector2 = Vector2(64, 64)   # 每个格子的大小
 @export var shader: ShaderMaterial                  # Shader 材质
 
@@ -18,38 +18,36 @@ var gas_densities = {
 	"Nitrogen": 1.2506
 }  # g/L
 
-# 存储气体网格的每个格子
+# 存储气体网格和精灵
 var grid = []
+var sprites = []
 
 # 初始化时创建网格数据
 func _ready():
 	var template_sprite = $Sprite2D
-	#template_sprite.material = shader
 	template_sprite.visible = false  # 模板不可见
 
 	# 初始化网格数据
 	for y in range(grid_size.y):
 		var row = []
+		var sprite_row = []
 		for x in range(grid_size.x):
 			var gas_type = gas_types[randi() % gas_types.size()]  # 随机选择气体类型
 			var gas_mass = randf_range(1, 100)  # 随机质量
 			row.append({
 				"gas": gas_type,
-				"mass": gas_mass,
-				"sprite": null  # 后续生成的Sprite
+				"mass": gas_mass
 			})
-		grid.append(row)
-
-	# 创建格子节点
-	for y in range(grid_size.y):
-		for x in range(grid_size.x):
+			
 			var sprite = template_sprite.duplicate() as Sprite2D
 			sprite.material = shader.duplicate() as ShaderMaterial  # 每个实例有独立材质
 			sprite.position = Vector2(x, y) * cell_size
 			sprite.scale = cell_size / Vector2(128, 128)  # 适配网格尺寸
 			sprite.visible = true
-			grid[y][x]["sprite"] = sprite
 			add_child(sprite)
+			sprite_row.append(sprite)
+		grid.append(row)
+		sprites.append(sprite_row)
 
 	# 创建一个固体十字
 	var center_row = grid_size.y / 2
@@ -62,6 +60,7 @@ func _ready():
 				if y >= 0 and y < grid_size.y and x >= 0 and x < grid_size.x:
 					grid[y][x]["gas"] = "Solid"
 					grid[y][x]["mass"] = randf_range(1, 100)  # 固体质量随机
+
 
 # 获取邻居格子
 func get_neighbors(row, col):
@@ -85,7 +84,6 @@ func exchange_gas_mass(row, col, neighbor_row, neighbor_col):
 
 # 交换元素的通用函数
 func swap_elements(a_row, a_col, b_row, b_col):
-	print("swap ",a_row, a_col, b_row, b_col)
 	var temp = grid[a_row][a_col]
 	grid[a_row][a_col] = grid[b_row][b_col]
 	grid[b_row][b_col] = temp
@@ -113,11 +111,17 @@ func density_based_swap(row, col, neighbor_row, neighbor_col):
 			if density1 < density2:
 				swap_elements(row, col, neighbor_row, neighbor_col)
 
-# 更新显示
+func debug_grid():
+	for y in range(grid_size.y):
+		var row = ""
+		for x in range(grid_size.x):
+			row += grid[y][x]["gas"] + " "
+		print(row)
+
 func _physics_process(delta):
 	# 随机选择 N 个格子并进行气体交换
 	var N = 8
-	for i in range(N):  # 改为使用 `i` 代替 `_`
+	for i in range(N):
 		var rand_row = randi() % grid_size.y
 		var rand_col = randi() % grid_size.x
 		var neighbors = get_neighbors(rand_row, rand_col)
@@ -138,6 +142,5 @@ func _physics_process(delta):
 		for x in range(grid_size.x):
 			var gas = grid[y][x]["gas"]
 			var color = gas_colors[gas]
-			var sprite = grid[y][x]["sprite"]
-			print("set color ",gas,color)
+			var sprite = sprites[y][x]
 			sprite.material.set_shader_parameter("cell_color", color)
