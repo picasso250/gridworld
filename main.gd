@@ -1,7 +1,7 @@
 extends Node2D
 
-@export var grid_size: Vector2i = Vector2i(11,11)  # n x m 格子数量
-@export var cell_size: Vector2 = Vector2(64, 64)   # 每个格子的大小
+@export var grid_size: Vector2i = Vector2i(11, 11)  # n x m 格子数量
+@export var cell_size: Vector2 = Vector2(64, 64)    # 每个格子的大小
 @export var shader: ShaderMaterial                  # Shader 材质
 
 # 气体和液体类型及其颜色与密度
@@ -18,11 +18,12 @@ var substance_densities = {
 	"Carbon Dioxide": 1.977,
 	"Nitrogen": 1.2506,
 	"Water": 997.0                      # Density of water in g/L
-}  
+}
 
 # 存储气体网格和精灵
 var grid = []
 var sprites = []
+var labels = []  # 用于存储标签
 
 # 初始化时创建网格数据
 func _ready():
@@ -33,12 +34,14 @@ func _ready():
 	for y in range(grid_size.y):
 		var row = []
 		var sprite_row = []
+		var label_row = []  # 用于每一行的标签
 		for x in range(grid_size.x):
 			row.append({
 				"type": substance_types[randi() % substance_types.size()],
-				"mass": randf_range(1, 100) 
+				"mass": randf_range(1, 100)
 			})
-			
+
+			# 创建精灵
 			var sprite = template_sprite.duplicate() as Sprite2D
 			sprite.material = shader.duplicate() as ShaderMaterial  # 每个实例有独立材质
 			sprite.position = Vector2(x, y) * cell_size
@@ -46,8 +49,21 @@ func _ready():
 			sprite.visible = true
 			add_child(sprite)
 			sprite_row.append(sprite)
+
+			# 创建并初始化标签
+			var label = Label.new()
+			var mass = row[x]["mass"]
+			label.text = str(round(mass))  # 显示四舍五入后的质量
+			label.set_size(cell_size)  # 标签尺寸与格子一致
+			label.align = HORIZONTAL_ALIGNMENT_CENTER
+			label.valign = VERTICAL_ALIGNMENT_CENTER
+			label.position = Vector2(x, y) * cell_size  # 对齐到网格位置
+			add_child(label)
+			label_row.append(label)
+
 		grid.append(row)
 		sprites.append(sprite_row)
+		labels.append(label_row)
 
 # 获取邻居格子
 func get_cell_neighbors(row, col):
@@ -128,7 +144,7 @@ func liquid_behavior(row, col):
 		var target_cell = grid[below_row][col]
 		var density_threshold = substance_densities["Water"]
 		var missing_mass = density_threshold - target_cell["mass"]
-		
+
 		if missing_mass > 0:
 			# 先填满正下方格子
 			var fill_mass = min(gas1["mass"], missing_mass)
@@ -212,10 +228,12 @@ func _physics_process(delta):
 			if grid[y][x]["type"] == "Water":
 				liquid_behavior(y, x)
 
-	# 更新每个格子的颜色
+	# 更新每个格子的颜色和质量显示
 	for y in range(grid_size.y):
 		for x in range(grid_size.x):
 			var gas = grid[y][x]["type"]
 			var color = substance_colors[gas]
 			var sprite = sprites[y][x]
+			var label = labels[y][x]  # 获取对应的标签
 			sprite.material.set_shader_parameter("cell_color", color)
+			label.text = str(round(grid[y][x]["mass"]))  # 更新标签的质量
