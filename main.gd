@@ -135,7 +135,6 @@ func liquid_behavior(row, col):
 			var fill_mass = min(current_cell["mass"], missing_mass)
 			grid[below_row][col]["mass"] += fill_mass
 			grid[row][col]["mass"] -= fill_mass
-			missing_mass -= fill_mass
 
 	# 处理左右为水的情况，随机选择一个平分质量
 	elif below_cell["type"] != "Water":
@@ -170,8 +169,9 @@ func liquid_behavior(row, col):
 			current_cell["mass"] = avg_mass_right
 			gas_right["mass"] = avg_mass_right
 
-	# 下方是气体，与其交换
-	swap_elements(row, col, below_row, col)
+	# 下方是气体，且不是水或固体，进行交换
+	if below_cell["type"] != "Water" and below_cell["type"] != "Solid":
+		swap_elements(row, col, below_row, col)
 
 # 在 _physics_process 中应用液体行为
 func _physics_process(delta):
