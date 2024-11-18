@@ -5,15 +5,15 @@ extends Node2D
 @export var shader: ShaderMaterial                  # Shader 材质
 
 # 气体和液体类型及其颜色与密度
-var gas_types = ["Oxygen", "Carbon Dioxide", "Nitrogen", "Water"]
-var gas_colors = {
+var substance_types = ["Oxygen", "Carbon Dioxide", "Nitrogen", "Water"]
+var substance_colors = {
 	"Oxygen": Color(0.5, 0.5, 1),        # Soft blue
 	"Carbon Dioxide": Color(0.2, 0.2, 0.2),  # Dark gray-black
 	"Nitrogen": Color(0.4, 0.6, 0.4),   # Soft green-gray
 	"Solid": Color(0.5, 0.5, 0.5),      # Gray (unchanged)
 	"Water": Color(0, 0.5, 1)           # Blue for water
 }
-var gas_densities = {
+var substance_densities = {
 	"Oxygen": 1.429,
 	"Carbon Dioxide": 1.977,
 	"Nitrogen": 1.2506,
@@ -34,7 +34,7 @@ func _ready():
 		var row = []
 		var sprite_row = []
 		for x in range(grid_size.x):
-			var gas_type = gas_types[randi() % gas_types.size()]  # 随机选择类型
+			var gas_type = substance_types[randi() % substance_types.size()]  # 随机选择类型
 			var gas_mass = randf_range(1, 100)  # 随机质量
 			row.append({
 				"gas": gas_type,
@@ -52,7 +52,7 @@ func _ready():
 		sprites.append(sprite_row)
 
 # 获取邻居格子
-func get_neighbors(row, col):
+func get_cell_neighbors(row, col):
 	var neighbors = []
 	for r in range(row - 1, row + 2):
 		for c in range(col - 1, col + 2):
@@ -61,7 +61,7 @@ func get_neighbors(row, col):
 	return neighbors
 
 # 交换气体质量（同种气体）
-func exchange_gas_mass(row, col, neighbor_row, neighbor_col):
+func exchange_substance_mass(row, col, neighbor_row, neighbor_col):
 	var gas1 = grid[row][col]
 	var gas2 = grid[neighbor_row][neighbor_col]
 
@@ -78,7 +78,7 @@ func swap_elements(a_row, a_col, b_row, b_col):
 	grid[b_row][b_col] = temp
 
 # 密度基于交换气体位置
-func density_based_swap(row, col, neighbor_row, neighbor_col):
+func substance_density_swap(row, col, neighbor_row, neighbor_col):
 	var gas1 = grid[row][col]
 	var gas2 = grid[neighbor_row][neighbor_col]
 
@@ -90,8 +90,8 @@ func density_based_swap(row, col, neighbor_row, neighbor_col):
 		return
 
 	if gas1["gas"] != gas2["gas"]:  # 不同气体
-		var density1 = gas_densities[gas1["gas"]]
-		var density2 = gas_densities[gas2["gas"]]
+		var density1 = substance_densities[gas1["gas"]]
+		var density2 = substance_densities[gas2["gas"]]
 
 		if row < neighbor_row:
 			if density1 > density2:
@@ -128,9 +128,9 @@ func liquid_behavior(row, col):
 	if gas2["gas"] == "Solid":
 		return  # 固体阻挡
 
-	elif gas2["gas"] in gas_densities.keys() and gas2["gas"] == "Water":
+	elif gas2["gas"] in substance_densities.keys() and gas2["gas"] == "Water":
 		# 查看周围的液体格子，随机选择一个平均分质量
-		var neighbors = get_neighbors(below_row, col)
+		var neighbors = get_cell_neighbors(below_row, col)
 		var liquid_neighbors = filter_liquid_neighbors(neighbors)
 		if liquid_neighbors.size() > 0:
 			var random_liquid = liquid_neighbors[randi() % liquid_neighbors.size()]
@@ -139,7 +139,7 @@ func liquid_behavior(row, col):
 			grid[row][col]["mass"] = avg_mass
 			target_cell["mass"] = avg_mass
 
-	elif gas2["gas"] in gas_densities.keys() and gas2["gas"] != "Water":
+	elif gas2["gas"] in substance_densities.keys() and gas2["gas"] != "Water":
 		# 下方是气体，与其交换
 		swap_elements(row, col, below_row, col)
 
@@ -149,7 +149,7 @@ func _physics_process(delta):
 	for i in range(N):
 		var rand_row = randi() % grid_size.y
 		var rand_col = randi() % grid_size.x
-		var neighbors = get_neighbors(rand_row, rand_col)
+		var neighbors = get_cell_neighbors(rand_row, rand_col)
 		var neighbor = neighbors[randi() % neighbors.size()]
 		var neighbor_row = neighbor.x
 		var neighbor_col = neighbor.y
@@ -158,14 +158,14 @@ func _physics_process(delta):
 		var gas2 = grid[neighbor_row][neighbor_col]
 
 		if gas1["gas"] == gas2["gas"] and gas1["gas"] != "Solid":
-			exchange_gas_mass(rand_row, rand_col, neighbor_row, neighbor_col)
+			exchange_substance_mass(rand_row, rand_col, neighbor_row, neighbor_col)
 		else:
-			density_based_swap(rand_row, rand_col, neighbor_row, neighbor_col)
+			substance_density_swap(rand_row, rand_col, neighbor_row, neighbor_col)
 
 	# 更新每个格子的颜色
 	for y in range(grid_size.y):
 		for x in range(grid_size.x):
 			var gas = grid[y][x]["gas"]
-			var color = gas_colors[gas]
+			var color = substance_colors[gas]
 			var sprite = sprites[y][x]
 			sprite.material.set_shader_parameter("cell_color", color)
