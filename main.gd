@@ -4,19 +4,21 @@ extends Node2D
 @export var cell_size: Vector2 = Vector2(64, 64)   # 每个格子的大小
 @export var shader: ShaderMaterial                  # Shader 材质
 
-# 气体类型及其颜色与密度
-var gas_types = ["Oxygen", "Carbon Dioxide", "Nitrogen"]
+# 气体和液体类型及其颜色与密度
+var gas_types = ["Oxygen", "Carbon Dioxide", "Nitrogen", "Water"]
 var gas_colors = {
 	"Oxygen": Color(0.5, 0.5, 1),        # Soft blue
 	"Carbon Dioxide": Color(0.2, 0.2, 0.2),  # Dark gray-black
 	"Nitrogen": Color(0.4, 0.6, 0.4),   # Soft green-gray
-	"Solid": Color(0.5, 0.5, 0.5)       # Gray (unchanged)
+	"Solid": Color(0.5, 0.5, 0.5),      # Gray (unchanged)
+	"Water": Color(0, 0.5, 1)           # Blue for water
 }
 var gas_densities = {
 	"Oxygen": 1.429,
 	"Carbon Dioxide": 1.977,
-	"Nitrogen": 1.2506
-}  # g/L
+	"Nitrogen": 1.2506,
+	"Water": 997.0                      # Density of water in g/L
+}  
 
 # 存储气体网格和精灵
 var grid = []
@@ -32,7 +34,7 @@ func _ready():
 		var row = []
 		var sprite_row = []
 		for x in range(grid_size.x):
-			var gas_type = gas_types[randi() % gas_types.size()]  # 随机选择气体类型
+			var gas_type = gas_types[randi() % gas_types.size()]  # 随机选择类型
 			var gas_mass = randf_range(1, 100)  # 随机质量
 			row.append({
 				"gas": gas_type,
@@ -48,19 +50,6 @@ func _ready():
 			sprite_row.append(sprite)
 		grid.append(row)
 		sprites.append(sprite_row)
-
-	# 创建一个固体十字
-	var center_row = grid_size.y / 2
-	var center_col = grid_size.x / 2
-	var cross_size = int(grid_size.y / 2)
-
-	for y in range(center_row - cross_size, center_row + cross_size + 1):
-		for x in range(center_col - cross_size, center_col + cross_size + 1):
-			if y == center_row or x == center_col:
-				if y >= 0 and y < grid_size.y and x >= 0 and x < grid_size.x:
-					grid[y][x]["gas"] = "Solid"
-					grid[y][x]["mass"] = randf_range(1, 100)  # 固体质量随机
-
 
 # 获取邻居格子
 func get_neighbors(row, col):
@@ -117,6 +106,42 @@ func debug_grid():
 		for x in range(grid_size.x):
 			row += grid[y][x]["gas"] + " "
 		print(row)
+
+# 辅助函数：过滤邻居格子
+func filter_liquid_neighbors(neighbors):
+	var liquid_neighbors = []
+	for neighbor in neighbors:
+		var cell = grid[neighbor.x][neighbor.y]
+		if cell["gas"] == "Water":
+			liquid_neighbors.append(neighbor)
+	return liquid_neighbors
+
+# 液体运动规则
+func liquid_behavior(row, col):
+	var below_row = row + 1
+	if below_row >= grid_size.y:
+		return  # 底部边界
+
+	var gas1 = grid[row][col]
+	var gas2 = grid[below_row][col]
+
+	if gas2["gas"] == "Solid":
+		return  # 固体阻挡
+
+	elif gas2["gas"] in gas_densities.keys() and gas2["gas"] == "Water":
+		# 查看周围的液体格子，随机选择一个平均分质量
+		var neighbors = get_neighbors(below_row, col)
+		var liquid_neighbors = filter_liquid_neighbors(neighbors)
+		if liquid_neighbors.size() > 0:
+			var random_liquid = liquid_neighbors[randi() % liquid_neighbors.size()]
+			var target_cell = grid[random_liquid.x][random_liquid.y]
+			var avg_mass = (gas1["mass"] + target_cell["mass"]) / 2
+			grid[row][col]["mass"] = avg_mass
+			target_cell["mass"] = avg_mass
+
+	elif gas2["gas"] in gas_densities.keys() and gas2["gas"] != "Water":
+		# 下方是气体，与其交换
+		swap_elements(row, col, below_row, col)
 
 func _physics_process(delta):
 	# 随机选择 N 个格子并进行气体交换

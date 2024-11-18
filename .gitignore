@@ -9,3 +9,4 @@
 *.svg
 *.webp
 *.blend*
+.vscode/settings.json
