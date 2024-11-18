@@ -7,10 +7,10 @@ extends Node2D
 # 气体类型及其颜色与密度
 var gas_types = ["Oxygen", "Carbon Dioxide", "Nitrogen"]
 var gas_colors = {
-	"Oxygen": Color(0, 0, 1),  # Blue
-	"Carbon Dioxide": Color(0, 0, 0),  # Black
-	"Nitrogen": Color(0, 1, 0),  # Green
-	"Solid": Color(0.5, 0.5, 0.5)  # Gray
+	"Oxygen": Color(0.5, 0.5, 1),        # Soft blue
+	"Carbon Dioxide": Color(0.2, 0.2, 0.2),  # Dark gray-black
+	"Nitrogen": Color(0.4, 0.6, 0.4),   # Soft green-gray
+	"Solid": Color(0.5, 0.5, 0.5)       # Gray (unchanged)
 }
 var gas_densities = {
 	"Oxygen": 1.429,
