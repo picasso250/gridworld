@@ -37,7 +37,7 @@ func _ready():
 			var gas_type = substance_types[randi() % substance_types.size()]  # 随机选择类型
 			var gas_mass = randf_range(1, 100)  # 随机质量
 			row.append({
-				"gas": gas_type,
+				"type": gas_type,
 				"mass": gas_mass
 			})
 			
@@ -65,7 +65,7 @@ func exchange_substance_mass(row, col, neighbor_row, neighbor_col):
 	var gas1 = grid[row][col]
 	var gas2 = grid[neighbor_row][neighbor_col]
 
-	if gas1["gas"] == gas2["gas"] and gas1["gas"] != "Solid":
+	if gas1["type"] == gas2["type"] and gas1["type"] != "Solid":
 		var total_mass = gas1["mass"] + gas2["mass"]
 		var new_mass = total_mass / 2
 		grid[row][col]["mass"] = new_mass
@@ -82,16 +82,16 @@ func substance_density_swap(row, col, neighbor_row, neighbor_col):
 	var gas1 = grid[row][col]
 	var gas2 = grid[neighbor_row][neighbor_col]
 
-	if gas1["gas"] == "Solid" or gas2["gas"] == "Solid":
+	if gas1["type"] == "Solid" or gas2["type"] == "Solid":
 		return  # 固体不交换
 
 	if row == neighbor_row:  # 同行
 		swap_elements(row, col, neighbor_row, neighbor_col)
 		return
 
-	if gas1["gas"] != gas2["gas"]:  # 不同气体
-		var density1 = substance_densities[gas1["gas"]]
-		var density2 = substance_densities[gas2["gas"]]
+	if gas1["type"] != gas2["type"]:  # 不同气体
+		var density1 = substance_densities[gas1["type"]]
+		var density2 = substance_densities[gas2["type"]]
 
 		if row < neighbor_row:
 			if density1 > density2:
@@ -104,7 +104,7 @@ func debug_grid():
 	for y in range(grid_size.y):
 		var row = ""
 		for x in range(grid_size.x):
-			row += grid[y][x]["gas"] + " "
+			row += grid[y][x]["type"] + " "
 		print(row)
 
 # 辅助函数：过滤邻居格子
@@ -112,7 +112,7 @@ func filter_liquid_neighbors(neighbors):
 	var liquid_neighbors = []
 	for neighbor in neighbors:
 		var cell = grid[neighbor.x][neighbor.y]
-		if cell["gas"] == "Water":
+		if cell["type"] == "Water":
 			liquid_neighbors.append(neighbor)
 	return liquid_neighbors
 
@@ -125,10 +125,10 @@ func liquid_behavior(row, col):
 	var gas1 = grid[row][col]
 	var gas2 = grid[below_row][col]
 
-	if gas2["gas"] == "Solid":
+	if gas2["type"] == "Solid":
 		return  # 固体阻挡
 
-	elif gas2["gas"] in substance_densities.keys() and gas2["gas"] == "Water":
+	elif gas2["type"] in substance_densities.keys() and gas2["type"] == "Water":
 		# 查看周围的液体格子，随机选择一个平均分质量
 		var neighbors = get_cell_neighbors(below_row, col)
 		var liquid_neighbors = filter_liquid_neighbors(neighbors)
@@ -139,7 +139,7 @@ func liquid_behavior(row, col):
 			grid[row][col]["mass"] = avg_mass
 			target_cell["mass"] = avg_mass
 
-	elif gas2["gas"] in substance_densities.keys() and gas2["gas"] != "Water":
+	elif gas2["type"] in substance_densities.keys() and gas2["type"] != "Water":
 		# 下方是气体，与其交换
 		swap_elements(row, col, below_row, col)
 
@@ -157,7 +157,7 @@ func _physics_process(delta):
 		var gas1 = grid[rand_row][rand_col]
 		var gas2 = grid[neighbor_row][neighbor_col]
 
-		if gas1["gas"] == gas2["gas"] and gas1["gas"] != "Solid":
+		if gas1["type"] == gas2["type"] and gas1["type"] != "Solid":
 			exchange_substance_mass(rand_row, rand_col, neighbor_row, neighbor_col)
 		else:
 			substance_density_swap(rand_row, rand_col, neighbor_row, neighbor_col)
@@ -165,7 +165,7 @@ func _physics_process(delta):
 	# 更新每个格子的颜色
 	for y in range(grid_size.y):
 		for x in range(grid_size.x):
-			var gas = grid[y][x]["gas"]
+			var gas = grid[y][x]["type"]
 			var color = substance_colors[gas]
 			var sprite = sprites[y][x]
 			sprite.material.set_shader_parameter("cell_color", color)
