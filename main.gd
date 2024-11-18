@@ -1,6 +1,6 @@
 extends Node2D
 
-@export var grid_size: Vector2i = Vector2i(11, 11)  # n x m 格子数量
+@export var grid_size: Vector2i = Vector2i(11,11)  # n x m 格子数量
 @export var cell_size: Vector2 = Vector2(64, 64)    # 每个格子的大小
 @export var shader: ShaderMaterial                  # Shader 材质
 
@@ -152,20 +152,6 @@ func liquid_behavior(row, col):
 			gas1["mass"] -= fill_mass
 			missing_mass -= fill_mass
 
-			# 如果仍然有剩余质量，填充其他下方水格子
-			if missing_mass > 0:
-				var neighbors = get_cell_neighbors(below_row, col)
-				var liquid_neighbors = filter_liquid_neighbors(neighbors)
-				# 排除正下方格子
-				liquid_neighbors.erase(Vector2(below_row, col))
-
-				if liquid_neighbors.size() > 0:
-					var random_liquid = liquid_neighbors[randi() % liquid_neighbors.size()]
-					var target_cell2 = grid[random_liquid.x][random_liquid.y]
-					var fill_mass2 = min(gas1["mass"], missing_mass)
-					target_cell2["mass"] += fill_mass2
-					gas1["mass"] -= fill_mass2
-
 	# 处理左右为水的情况，随机选择一个平分质量
 	elif gas2["type"] != "Water":
 		var left_col = col - 1
@@ -204,6 +190,7 @@ func liquid_behavior(row, col):
 
 # 在 _physics_process 中应用液体行为
 func _physics_process(delta):
+	debug_grid()
 	# 随机选择 N 个格子并进行气体交换
 	var N = 8
 	for i in range(N):
