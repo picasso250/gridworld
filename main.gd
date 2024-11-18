@@ -3,6 +3,7 @@ extends Node2D
 @export var grid_size: Vector2i = Vector2i(8,8)  # n x m 格子数量
 @export var cell_size: Vector2 = Vector2(64, 64)    # 每个格子的大小
 @export var shader: ShaderMaterial                  # Shader 材质
+@export var liquid_shader: ShaderMaterial                  # Shader 材质
 
 # 气体和液体类型及其颜色与密度
 var substance_types = ["Oxygen", "Carbon Dioxide", "Nitrogen", "Water"]
@@ -33,8 +34,9 @@ func _ready():
 		var row = []
 		var sprite_row = []
 		for x in range(grid_size.x):
+			var t = substance_types[randi() % substance_types.size()]
 			row.append({
-				"type": substance_types[randi() % substance_types.size()],
+				"type": t,
 				"mass": randf_range(1, 100)
 			})
 
@@ -46,7 +48,7 @@ func _ready():
 			sprite.visible = true
 			add_child(sprite)
 			sprite_row.append(sprite)
-			sprite.tooltip_text = "位置: (" + str(x) + ", " + str(y) + ")"
+			sprite.tooltip_text = t+"\n位置: (" + str(x) + ", " + str(y) + ")"
 
 		grid.append(row)
 		sprites.append(sprite_row)
@@ -131,7 +133,7 @@ func liquid_behavior(row, col):
 	if current_cell["mass"] == 0 and above_cell and above_cell["type"] != "Water" and above_cell["type"] != "Solid":
 		var gas_type = above_cell["type"]
 		current_cell["type"] = gas_type
-		var total_mass = current_cell["mass"] + above_cell["mass"]
+		var total_mass =  above_cell["mass"]
 		var avg_mass = total_mass / 2
 		current_cell["mass"] = avg_mass
 		above_cell["mass"] = avg_mass
@@ -147,6 +149,7 @@ func liquid_behavior(row, col):
 			var fill_mass = min(current_cell["mass"], missing_mass)
 			grid[below_row][col]["mass"] += fill_mass
 			grid[row][col]["mass"] -= fill_mass
+			return
 
 	# 处理左右为水的情况，随机选择一个平分质量
 	elif below_cell["type"] != "Water":
@@ -180,10 +183,12 @@ func liquid_behavior(row, col):
 			# 平分质量
 			current_cell["mass"] = avg_mass_right
 			gas_right["mass"] = avg_mass_right
+		return
 
 	# 下方是气体，且不是水或固体，进行交换
 	if below_cell["type"] != "Water" and below_cell["type"] != "Solid":
 		swap_elements(row, col, below_row, col)
+		return
 
 # 在 _physics_process 中应用液体行为
 func _physics_process(delta):
@@ -217,5 +222,12 @@ func _physics_process(delta):
 			var gas = grid[y][x]["type"]
 			var color = substance_colors[gas]
 			var sprite = sprites[y][x]
-			sprite.get_node("TextureRect").material.set_shader_parameter("cell_color", color)
+			if gas=="Water":
+				sprite.get_node("TextureRect").material = liquid_shader.duplicate() as ShaderMaterial  # 每个实例有独立材质
+				# Calculate liquid_amount as mass divided by water density
+				var liquid_amount = grid[y][x]["mass"] / substance_densities["Water"]
+				sprite.get_node("TextureRect").material.set_shader_parameter("liquid_amount", liquid_amount)
+			else:
+				sprite.get_node("TextureRect").material.set_shader_parameter("cell_color", color)
+
 			sprite.get_node("MarginContainer").get_node("Label").text = str(round(grid[y][x]["mass"]))  # 更新标签的质量
