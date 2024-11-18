@@ -119,11 +119,23 @@ func filter_liquid_neighbors(neighbors):
 # 液体运动规则
 func liquid_behavior(row, col):
 	var below_row = row + 1
+	var above_row = row - 1  # 正上方
 	if below_row >= grid_size.y:
 		return  # 底部边界
 
 	var current_cell = grid[row][col]
 	var below_cell = grid[below_row][col]
+	var above_cell = grid[above_row][col] if above_row >= 0 else null  # 正上方的格子
+
+	# 如果当前格子的质量为 0 且正上方是气体，平分质量并更改类型
+	if current_cell["mass"] == 0 and above_cell and above_cell["type"] != "Water" and above_cell["type"] != "Solid":
+		var gas_type = above_cell["type"]
+		current_cell["type"] = gas_type
+		var total_mass = current_cell["mass"] + above_cell["mass"]
+		var avg_mass = total_mass / 2
+		current_cell["mass"] = avg_mass
+		above_cell["mass"] = avg_mass
+		return
 
 	# 处理下方格子，如果下方有水且其质量不足
 	if below_cell["type"] == "Water":
