@@ -116,7 +116,7 @@ func liquid_behavior(row, col):
 	var above_cell = cells[above_row][col] if (above_row >= 0) else null
 
 	# 如果当前格子的质量为 0 且正上方是气体，平分质量并更改类型
-	if current_cell.mass == 0 and above_cell and above_cell.type != "Water" and above_cell.type != "Solid":
+	if current_cell.mass == 0 and above_cell and above_cell.phase == "Gas" :
 		var gas_type = above_cell.type
 		current_cell.set_type(gas_type)
 		current_cell.set_phase("Gas")
@@ -126,39 +126,44 @@ func liquid_behavior(row, col):
 		above_cell.set_mass(avg_mass)
 		return
 
-	# 处理下方格子，如果下方有水且其质量不足
-	if below_cell.type == "Water":
-		fall_liquid(current_cell,below_cell)
+	# 如果上方是液体，调用fall_liquid
+	if above_cell and above_cell.phase == "Liquid":
+		fall_liquid(current_cell, above_cell)
 		return
 
-	# 处理左右为水的情况，优化后的逻辑
+	# 处理下方格子，如果下方有液体且其质量不足
+	if below_cell.phase == "Liquid":
+		fall_liquid(current_cell, below_cell)
+		return
+
+	# 处理左右为液体的情况，优化后的逻辑
 	var left_col = col - 1
 	var right_col = col + 1
 	var cell_left = null
 	var cell_right = null
-	var water_cells = []
+	var liquid_cells = []
 
-	# 检查左边是否为水
+	# 检查左边是否为液体
 	if left_col >= 0:
 		cell_left = cells[row][left_col]
-		if cell_left.type == "Water":
-			water_cells.append(cell_left)
+		if cell_left.phase == "Liquid":
+			liquid_cells.append(cell_left)
 
-	# 检查右边是否为水
+	# 检查右边是否为液体
 	if right_col < grid_size.x:
 		cell_right = cells[row][right_col]
-		if cell_right.type == "Water":
-			water_cells.append(cell_right)
+		if cell_right.phase == "Liquid":
+			liquid_cells.append(cell_right)
 
-	# 如果左右有水，随机选择一个进行质量交换
-	if water_cells.size() > 0:
-		var selected_cell = water_cells[randi() % water_cells.size()]
+	# 如果左右有液体，随机选择一个进行质量交换
+	if liquid_cells.size() > 0:
+		var selected_cell = liquid_cells[randi() % liquid_cells.size()]
 		# 使用 exchange_substance_mass 函数交换质量
 		exchange_substance_mass(row, col, selected_cell.x, selected_cell.y)
 		return
 
-	# 下方是气体，且不是水或固体，进行交换
-	if below_cell.type != "Water" and below_cell.type != "Solid":
+	# 下方是气体且不是水或固体，进行交换
+	if below_cell.phase == "Gas" :
 		swap_elements(row, col, below_row, col)
 		return
 
