@@ -6,6 +6,7 @@ extends Control
 @export var gas_shader: ShaderMaterial
 @export var liquid_shader: ShaderMaterial
 @export var solid_shader: ShaderMaterial
+@export var vacuum_shader: ShaderMaterial  # New shader for vacuum
 @export var x=0
 @export var y=0
 
@@ -16,7 +17,8 @@ var substance_types = ["Oxygen", "Carbon Dioxide", "Nitrogen", "Water"]
 var phase_types = {
 	"Gas": ["Oxygen", "Carbon Dioxide", "Nitrogen"],
 	"Liquid": ["Water"],  # 只有水可以是液态
-	"Solid": ["Solid"]    # 只有 "Solid" 作为固态
+	"Solid": ["Solid"],    # 只有 "Solid" 作为固态
+	"Vacuum": ["Vacuum"]          # 新增的真空相，没有物质
 }
 
 var substance_colors = {
@@ -24,7 +26,8 @@ var substance_colors = {
 	"Carbon Dioxide": Color(0.2, 0.2, 0.2),  # Dark gray-black
 	"Nitrogen": Color(0.4, 0.6, 0.4),   # Soft green-gray
 	"Solid": Color(0.5, 0.5, 0.5),      # Gray (unchanged)
-	"Water": Color(0, 0.5, 1)           # Blue for water
+	"Water": Color(0, 0.5, 1),           # Blue for water
+	"Vacuum": Color(0.9, 0.9, 0.9)       # Light gray for vacuum (empty/void look)
 }
 var substance_densities = {
 	"Oxygen": 1.429,
@@ -59,11 +62,12 @@ func randomize_substance():
 		set_mass(randf_range(10.0, 100.0))  # 中等质量
 	elif new_phase == "Solid":
 		set_mass(randf_range(50.0, 500.0))  # 较高质量
+	elif new_phase == "Vacuum":
+		set_mass(0)  # Vacuum has no mass, so set to 0
 		
 	update_visuals()
 	tooltip_text = _get_tooltip_()
 	set_mass_display()
-	
 
 # 1. 网格元素设置（如类型、质量）
 # 设置物质类型
@@ -101,6 +105,10 @@ func update_visuals():
 		texture_rect.material = solid_shader.duplicate()
 		var color = substance_colors[type]
 		texture_rect.material.set_shader_parameter("solid_color", color)
+	elif phase == "Vacuum":
+		# Vacuum uses the solid shader with a vacuum color
+		texture_rect.material = solid_shader.duplicate()
+		texture_rect.material.set_shader_parameter("solid_color", substance_colors["Vacuum"])
 	else: # 默认气态
 		texture_rect.material = gas_shader.duplicate()
 		var color = substance_colors[type]
@@ -138,7 +146,6 @@ func swap(other_instance: Node):
 	other_instance.update_visuals()
 	other_instance.set_mass_display()
 	other_instance.tooltip_text = other_instance._get_tooltip_()
-	
 
 func _on_gui_input(event):
 	if event is InputEventMouseButton:
