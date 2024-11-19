@@ -94,6 +94,16 @@ func filter_liquid_neighbors(neighbors):
 			liquid_neighbors.append(neighbor)
 	return liquid_neighbors
 
+# 液体下落并填充缺少的质量
+func fall_liquid(current_cell,below_cell):
+	var density_threshold = template_cell.substance_densities["Water"]
+	var missing_mass = density_threshold - below_cell.mass
+	if missing_mass > 0:
+		# 填满正下方格子
+		var fill_mass = min(current_cell.mass, missing_mass)
+		below_cell.set_mass(below_cell.mass + fill_mass)
+		current_cell.set_mass(current_cell.mass - fill_mass)
+
 # 液体运动规则
 func liquid_behavior(row, col):
 	var below_row = row + 1
@@ -118,15 +128,8 @@ func liquid_behavior(row, col):
 
 	# 处理下方格子，如果下方有水且其质量不足
 	if below_cell.type == "Water":
-		var density_threshold = template_cell.substance_densities["Water"]
-		var missing_mass = density_threshold - below_cell.mass
-
-		if missing_mass > 0:
-			# 先填满正下方格子
-			var fill_mass = min(current_cell.mass, missing_mass)
-			below_cell.set_mass(below_cell.mass + fill_mass)
-			current_cell.set_mass(current_cell.mass - fill_mass)
-			return
+		fall_liquid(current_cell,below_cell)
+		return
 
 	# 处理左右为水的情况，优化后的逻辑
 	var left_col = col - 1
