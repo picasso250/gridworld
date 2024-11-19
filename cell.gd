@@ -5,6 +5,7 @@ extends Control
 @export var mass: float = 50.0
 @export var gas_shader: ShaderMaterial
 @export var liquid_shader: ShaderMaterial
+@export var solid_shader: ShaderMaterial
 @export var x=0
 @export var y=0
 
@@ -92,14 +93,16 @@ func set_mass_display():
 	var label = get_node("MarginContainer/Label")
 	label.text = str(round(mass))
 
-# 更新视觉效果（颜色、Shader）
 func update_visuals():
-	# 设置颜色和 Shader 材质
 	var texture_rect = get_node("TextureRect")
-	if phase=='liquid':
+	if phase == "Liquid":
 		texture_rect.material = liquid_shader.duplicate()
-		texture_rect.material.set_shader_parameter("liquid_amount", mass/substance_densities["Water"])
-	else:
+		texture_rect.material.set_shader_parameter("liquid_amount", mass / substance_densities["Water"])
+	elif phase == "Solid":
+		texture_rect.material = solid_shader.duplicate()
+		var color = substance_colors[type]
+		texture_rect.material.set_shader_parameter("solid_color", color)
+	else: # 默认气态
 		texture_rect.material = gas_shader.duplicate()
 		var color = substance_colors[type]
 		texture_rect.material.set_shader_parameter("gas_color", color)

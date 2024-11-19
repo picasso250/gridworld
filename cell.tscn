@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=3 uid="uid://bec05gdng1xbl"]
+[gd_scene load_steps=11 format=3 uid="uid://bec05gdng1xbl"]
 
 [ext_resource type="Script" path="res://cell.gd" id="1_hkqs8"]
 [ext_resource type="Shader" path="res://gas_color.gdshader" id="2_jpsb1"]
 [ext_resource type="Shader" path="res://liquid_shader.gdshader" id="3_cpat3"]
+[ext_resource type="Shader" path="res://solid_shader.gdshader" id="4_uo4uh"]
 [ext_resource type="Texture2D" uid="uid://pwt82fq4ilg5" path="res://icon.svg" id="4_yaasq"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_8ltns"]
@@ -15,6 +16,10 @@ shader_parameter/speed = 1e-07
 shader = ExtResource("3_cpat3")
 shader_parameter/liquid_color = Vector4(0, 0, 1, 1)
 shader_parameter/liquid_amount = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pi4ua"]
+shader = ExtResource("4_uo4uh")
+shader_parameter/solid_color = Vector4(0.5, 0.5, 0.5, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ilp45"]
 shader = ExtResource("3_cpat3")
@@ -33,6 +38,7 @@ tooltip_text = "lalala"
 script = ExtResource("1_hkqs8")
 gas_shader = SubResource("ShaderMaterial_8ltns")
 liquid_shader = SubResource("ShaderMaterial_i2yb8")
+solid_shader = SubResource("ShaderMaterial_pi4ua")
 
 [node name="TextureRect" type="TextureRect" parent="."]
 material = SubResource("ShaderMaterial_ilp45")
