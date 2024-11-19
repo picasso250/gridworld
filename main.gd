@@ -1,6 +1,6 @@
 extends Node2D
 
-@export var grid_size: Vector2i = Vector2i(8, 8)  # n x m 格子数量
+@export var grid_size: Vector2i = Vector2i(3,3)  # n x m 格子数量
 @export var cell_size: Vector2 = Vector2(64, 64)    # 每个格子的大小
 
 var template_cell = preload("res://cell.tscn").instantiate()
@@ -56,8 +56,8 @@ func substance_density_swap(row, col, neighbor_row, neighbor_col):
 	var cell1 = cells[row][col]
 	var cell2 = cells[neighbor_row][neighbor_col]
 
-	if cell1.type == "Solid" or cell2.type == "Solid":
-		return  # 固体不交换
+	if cell1.type != "Gas" or cell2.type != "Gas":
+		return
 
 	if row == neighbor_row:  # 同行
 		swap_elements(row, col, neighbor_row, neighbor_col)
@@ -105,9 +105,14 @@ func fall_liquid(current_cell, below_cell):
 func liquid_behavior(row, col):
 	var below_row = row + 1
 	var above_row = row - 1  # 正上方
+	var left_col = col - 1
+	var right_col = col + 1
+	var cell_left = 		 cells[row][left_col] if left_col >= 0 else null
+	var cell_right = 		 cells[row][right_col] if right_col < grid_size.x else null
 
 	var current_cell = cells[row][col]
 	var above_cell = cells[above_row][col] if (above_row >= 0) else null
+	var below_cell = cells[below_row][col] if (below_row<grid_size.y) else null
 
 	# 如果当前格子的质量为 0 且正上方是气体，平分质量并更改类型
 	if current_cell.mass == 0 and above_cell and above_cell.phase == "Gas":
@@ -115,49 +120,44 @@ func liquid_behavior(row, col):
 		current_cell.set_type(gas_type)
 		current_cell.set_phase("Gas")
 		exchange_substance_mass(current_cell, above_cell)
-		return
-
 	# 如果上方是液体，调用fall_liquid
-	if above_cell and above_cell.phase == "Liquid":
+	elif above_cell and above_cell.phase == "Liquid":
 		fall_liquid(above_cell, current_cell)
 		return
 
-	if below_row < grid_size.y:
-		var below_cell = cells[below_row][col]
+	# 处理下方格子，如果下方有液体
+	elif below_cell and below_cell.phase == "Liquid":
+		fall_liquid(current_cell, below_cell)
 
-		# 处理下方格子，如果下方有液体
-		if below_cell.phase == "Liquid":
-			fall_liquid(current_cell, below_cell)
-			return
+	# 下方是气体，进行交换
+	elif below_cell and below_cell.phase == "Gas":
+		swap_elements(row, col, below_row, col)
+		return
 
-		# 下方是气体，进行交换
-		elif below_cell.phase == "Gas":
-			swap_elements(row, col, below_row, col)
-			return
-
-	# 处理左右为液体的情况，优化后的逻辑
-	var left_col = col - 1
-	var right_col = col + 1
-	var cell_left = null
-	var cell_right = null
-
-	# 检查左边是否为液体
-	if left_col >= 0:
-		cell_left = cells[row][left_col]
+	# 检查左边
+	if cell_left:
+		print(cell_left.phase)
 		if cell_left.phase == "Liquid":
 			exchange_substance_mass(current_cell, cell_left)
-			return
+		elif cell_left.phase == "Gas":
+			cell_left.set_phase(current_cell.phase)
+			cell_left.set_type(current_cell.type)
+			cell_left.set_mass(0)
+			exchange_substance_mass(current_cell,cell_left)
 
-	# 检查右边是否为液体
-	if right_col < grid_size.x:
-		cell_right = cells[row][right_col]
+	# 检查右边
+	elif cell_right:
 		if cell_right.phase == "Liquid":
 			exchange_substance_mass(current_cell, cell_right)
-			return
+		elif cell_right.phase == "Gas":
+			cell_right.set_phase(current_cell.phase)
+			cell_right.set_type(current_cell.type)
+			cell_right.set_mass(0)
+			exchange_substance_mass(current_cell,cell_right)
 
 func _physics_process(delta):
 	# 随机选择 N 个格子并根据物质类型进行处理
-	var N = 8
+	var N = 77
 	for i in range(N):
 		var rand_row = randi() % grid_size.y
 		var rand_col = randi() % grid_size.x
@@ -168,7 +168,7 @@ func _physics_process(delta):
 			liquid_behavior(rand_row, rand_col)
 			
 		# 处理气体
-		if cell.phase == "Gas":
+		elif cell.phase == "Gas":
 			var neighbors = get_cell_neighbors(rand_row, rand_col)
 			var neighbor = neighbors[randi() % neighbors.size()]
 			var neighbor_row = neighbor.x
