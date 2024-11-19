@@ -21,6 +21,8 @@ func _ready():
 			cell.position = Vector2(x, y) * cell_size
 			cell.scale = cell_size / Vector2(128, 128)  # 适配网格尺寸
 			cell.visible = true
+			cell.x = y
+			cell.y = x
 			add_child(cell)
 
 			# 将新创建的单元格添加到 cells 中
@@ -126,38 +128,30 @@ func liquid_behavior(row, col):
 			current_cell.set_mass(current_cell.mass - fill_mass)
 			return
 
-	# 处理左右为水的情况，随机选择一个平分质量
-	elif below_cell.type != "Water":
-		var left_col = col - 1
-		var right_col = col + 1
-		var cell_left = null
-		var cell_right = null
+	# 处理左右为水的情况，优化后的逻辑
+	var left_col = col - 1
+	var right_col = col + 1
+	var cell_left = null
+	var cell_right = null
+	var water_cells = []
 
-		if left_col >= 0:
-			cell_left = cells[row][left_col]
-		if right_col < grid_size.x:
-			cell_right = cells[row][right_col]
+	# 检查左边是否为水
+	if left_col >= 0:
+		cell_left = cells[row][left_col]
+		if cell_left.type == "Water":
+			water_cells.append(cell_left)
 
-		# 如果左右有水
-		if cell_left and cell_right and cell_left.type == "Water" and cell_right.type == "Water":
-			var total_mass = current_cell.mass + cell_left.mass + cell_right.mass
-			var avg_mass = total_mass / 3
-			# 平分质量
-			current_cell.set_mass(avg_mass)
-			cell_left.set_mass(avg_mass)
-			cell_right.set_mass(avg_mass)
-		elif cell_left and cell_left.type == "Water":
-			var total_mass_left = current_cell.mass + cell_left.mass
-			var avg_mass_left = total_mass_left / 2
-			# 平分质量
-			current_cell.set_mass(avg_mass_left)
-			cell_left.set_mass(avg_mass_left)
-		elif cell_right and cell_right.type == "Water":
-			var total_mass_right = current_cell.mass + cell_right.mass
-			var avg_mass_right = total_mass_right / 2
-			# 平分质量
-			current_cell.set_mass(avg_mass_right)
-			cell_right.set_mass(avg_mass_right)
+	# 检查右边是否为水
+	if right_col < grid_size.x:
+		cell_right = cells[row][right_col]
+		if cell_right.type == "Water":
+			water_cells.append(cell_right)
+
+	# 如果左右有水，随机选择一个进行质量交换
+	if water_cells.size() > 0:
+		var selected_cell = water_cells[randi() % water_cells.size()]
+		# 使用 exchange_substance_mass 函数交换质量
+		exchange_substance_mass(row, col, selected_cell.x, selected_cell.y)
 		return
 
 	# 下方是气体，且不是水或固体，进行交换
@@ -165,29 +159,30 @@ func liquid_behavior(row, col):
 		swap_elements(row, col, below_row, col)
 		return
 
-# 在 _physics_process 中应用液体行为
 func _physics_process(delta):
-	# 随机选择 N 个格子并进行气体交换
-	var N =8
+	# 随机选择 N 个格子并根据物质类型进行处理
+	var N = 8
 	for i in range(N):
 		var rand_row = randi() % grid_size.y
 		var rand_col = randi() % grid_size.x
-		var neighbors = get_cell_neighbors(rand_row, rand_col)
-		var neighbor = neighbors[randi() % neighbors.size()]
-		var neighbor_row = neighbor.x
-		var neighbor_col = neighbor.y
+		var cell = cells[rand_row][rand_col]
 
-		var cell1 = cells[rand_row][rand_col]
-		var cell2 = cells[neighbor_row][neighbor_col]
+		# 处理气体
+		if cell.phase =="Gas":
+			var neighbors = get_cell_neighbors(rand_row, rand_col)
+			var neighbor = neighbors[randi() % neighbors.size()]
+			var neighbor_row = neighbor.x
+			var neighbor_col = neighbor.y
 
-		if cell1.type == cell2.type and cell1.type != "Solid":
-			exchange_substance_mass(rand_row, rand_col, neighbor_row, neighbor_col)
-		else:
-			substance_density_swap(rand_row, rand_col, neighbor_row, neighbor_col)
+			var cell2 = cells[neighbor_row][neighbor_col]
 
-	# 处理液体行为
-	for y in range(grid_size.y):
-		for x in range(grid_size.x):
-			var cell = cells[y][x]
-			if cell.type == "Water":
-				liquid_behavior(y, x)
+			if cell.type == cell2.type :
+				exchange_substance_mass(rand_row, rand_col, neighbor_row, neighbor_col)
+			else:
+				substance_density_swap(rand_row, rand_col, neighbor_row, neighbor_col)
+		
+		# 处理液体
+		elif cell.phase == "Liquid":
+			liquid_behavior(rand_row, rand_col)
+
+		# 固体不做处理，跳过

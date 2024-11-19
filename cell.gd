@@ -82,6 +82,7 @@ func set_phase(new_phase: String):
 func set_mass(new_mass: float):
 	mass = new_mass
 	set_mass_display()
+	update_visuals()
 
 # 3. 更新显示内容
 
