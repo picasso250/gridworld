@@ -1,6 +1,6 @@
 shader_type canvas_item;
 
-uniform vec4 cell_color;
+uniform vec4 gas_color;
 uniform float noise_scale = 1.0; // 噪声放大倍数
 uniform float speed = 0.0000001; // 控制布朗运动的速度
 
@@ -25,7 +25,6 @@ void fragment() {
     float noise = random(uv);
 
     // 混合颜色
-    vec4 gas_color = cell_color;
     vec4 color = gas_color * noise;
     color.a *= smoothstep(0.3, 0.7, noise); // 控制透明度变化
 

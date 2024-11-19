@@ -1,57 +1,32 @@
 extends Node2D
 
-@export var grid_size: Vector2i = Vector2i(8,8)  # n x m 格子数量
+@export var grid_size: Vector2i = Vector2i(8, 8)  # n x m 格子数量
 @export var cell_size: Vector2 = Vector2(64, 64)    # 每个格子的大小
-@export var shader: ShaderMaterial                  # Shader 材质
-@export var liquid_shader: ShaderMaterial                  # Shader 材质
 
-# 气体和液体类型及其颜色与密度
-var substance_types = ["Oxygen", "Carbon Dioxide", "Nitrogen", "Water"]
-var substance_colors = {
-	"Oxygen": Color(0.5, 0.5, 1),        # Soft blue
-	"Carbon Dioxide": Color(0.2, 0.2, 0.2),  # Dark gray-black
-	"Nitrogen": Color(0.4, 0.6, 0.4),   # Soft green-gray
-	"Solid": Color(0.5, 0.5, 0.5),      # Gray (unchanged)
-	"Water": Color(0, 0.5, 1)           # Blue for water
-}
-var substance_densities = {
-	"Oxygen": 1.429,
-	"Carbon Dioxide": 1.977,
-	"Nitrogen": 1.2506,
-	"Water": 997.0                      # Density of water in g/L
-}
+var template_cell = preload("res://cell.tscn").instantiate()
 
 # 存储气体网格和精灵
-var grid = []
-var sprites = []
+var cells = []
 
 func _ready():
-	var template_sprite = preload("res://grid.tscn").instantiate()
-	#template_sprite.visible = false  # 模板不可见
-
 	# 初始化网格数据
 	for y in range(grid_size.y):
 		var row = []
-		var sprite_row = []
 		for x in range(grid_size.x):
-			var t = substance_types[randi() % substance_types.size()]
-			row.append({
-				"type": t,
-				"mass": randf_range(1, 100)
-			})
+			# 使用 Grid.gd 提供的接口来初始化每个网格元素
+			var cell = template_cell.duplicate() as Control
+			cell.randomize_substance()
 
-			# 创建精灵
-			var sprite = template_sprite.duplicate() as Control
-			sprite.get_node("TextureRect").material = shader.duplicate() as ShaderMaterial  # 每个实例有独立材质
-			sprite.position = Vector2(x, y) * cell_size
-			sprite.scale = cell_size / Vector2(128, 128)  # 适配网格尺寸
-			sprite.visible = true
-			add_child(sprite)
-			sprite_row.append(sprite)
-			sprite.tooltip_text = t+"\n位置: (" + str(x) + ", " + str(y) + ")"
+			# 设置格子的位置和材质
+			cell.position = Vector2(x, y) * cell_size
+			cell.scale = cell_size / Vector2(128, 128)  # 适配网格尺寸
+			cell.visible = true
+			add_child(cell)
 
-		grid.append(row)
-		sprites.append(sprite_row)
+			# 将新创建的单元格添加到 cells 中
+			row.append(cell)
+
+		cells.append(row)
 
 # 获取邻居格子
 func get_cell_neighbors(row, col):
@@ -62,38 +37,36 @@ func get_cell_neighbors(row, col):
 				neighbors.append(Vector2(r, c))
 	return neighbors
 
-# 交换气体质量（同种气体）
+# 交换相同类型气体的质量
 func exchange_substance_mass(row, col, neighbor_row, neighbor_col):
-	var gas1 = grid[row][col]
-	var gas2 = grid[neighbor_row][neighbor_col]
+	var cell1 = cells[row][col]
+	var cell2 = cells[neighbor_row][neighbor_col]
 
-	if gas1["type"] == gas2["type"] and gas1["type"] != "Solid":
-		var total_mass = gas1["mass"] + gas2["mass"]
+	if cell1.type == cell2.type and cell1.type != "Solid":
+		var total_mass = cell1.mass + cell2.mass
 		var new_mass = total_mass / 2
-		grid[row][col]["mass"] = new_mass
-		grid[neighbor_row][neighbor_col]["mass"] = new_mass
+		cell1.set_mass(new_mass)
+		cell2.set_mass(new_mass)
 
 # 交换元素的通用函数
 func swap_elements(a_row, a_col, b_row, b_col):
-	var temp = grid[a_row][a_col]
-	grid[a_row][a_col] = grid[b_row][b_col]
-	grid[b_row][b_col] = temp
+	cells[a_row][a_col].swap(cells[b_row][b_col])
 
 # 密度基于交换气体位置
 func substance_density_swap(row, col, neighbor_row, neighbor_col):
-	var gas1 = grid[row][col]
-	var gas2 = grid[neighbor_row][neighbor_col]
+	var cell1 = cells[row][col]
+	var cell2 = cells[neighbor_row][neighbor_col]
 
-	if gas1["type"] == "Solid" or gas2["type"] == "Solid":
+	if cell1.type == "Solid" or cell2.type == "Solid":
 		return  # 固体不交换
 
 	if row == neighbor_row:  # 同行
 		swap_elements(row, col, neighbor_row, neighbor_col)
 		return
 
-	if gas1["type"] != gas2["type"]:  # 不同气体
-		var density1 = substance_densities[gas1["type"]]
-		var density2 = substance_densities[gas2["type"]]
+	if cell1.type != cell2.type:  # 不同气体
+		var density1 = template_cell.substance_densities[cell1.type]
+		var density2 = template_cell.substance_densities[cell2.type]
 
 		if row < neighbor_row:
 			if density1 > density2:
@@ -106,15 +79,16 @@ func debug_grid():
 	for y in range(grid_size.y):
 		var row = ""
 		for x in range(grid_size.x):
-			row += grid[y][x]["type"] + " "
+			var cell = cells[y][x]
+			row += cell.type + " "
 		print(row)
 
 # 辅助函数：过滤邻居格子
 func filter_liquid_neighbors(neighbors):
 	var liquid_neighbors = []
 	for neighbor in neighbors:
-		var cell = grid[neighbor.x][neighbor.y]
-		if cell["type"] == "Water":
+		var cell = cells[neighbor.x][neighbor.y]
+		if cell.type == "Water":
 			liquid_neighbors.append(neighbor)
 	return liquid_neighbors
 
@@ -125,68 +99,68 @@ func liquid_behavior(row, col):
 	if below_row >= grid_size.y:
 		return  # 底部边界
 
-	var current_cell = grid[row][col]
-	var below_cell = grid[below_row][col]
-	var above_cell = grid[above_row][col] if above_row >= 0 else null  # 正上方的格子
+	var current_cell = cells[row][col]
+	var below_cell = cells[below_row][col]
+	var above_cell = cells[above_row][col] if (above_row >= 0) else null
 
 	# 如果当前格子的质量为 0 且正上方是气体，平分质量并更改类型
-	if current_cell["mass"] == 0 and above_cell and above_cell["type"] != "Water" and above_cell["type"] != "Solid":
-		var gas_type = above_cell["type"]
-		current_cell["type"] = gas_type
-		var total_mass =  above_cell["mass"]
+	if current_cell.mass == 0 and above_cell and above_cell.type != "Water" and above_cell.type != "Solid":
+		var gas_type = above_cell.type
+		current_cell.set_type(gas_type)
+		var total_mass = above_cell.mass
 		var avg_mass = total_mass / 2
-		current_cell["mass"] = avg_mass
-		above_cell["mass"] = avg_mass
+		current_cell.set_mass(avg_mass)
+		above_cell.set_mass(avg_mass)
 		return
 
 	# 处理下方格子，如果下方有水且其质量不足
-	if below_cell["type"] == "Water":
-		var density_threshold = substance_densities["Water"]
-		var missing_mass = density_threshold - below_cell["mass"]
+	if below_cell.type == "Water":
+		var density_threshold = template_cell.substance_densities["Water"]
+		var missing_mass = density_threshold - below_cell.mass
 
 		if missing_mass > 0:
 			# 先填满正下方格子
-			var fill_mass = min(current_cell["mass"], missing_mass)
-			grid[below_row][col]["mass"] += fill_mass
-			grid[row][col]["mass"] -= fill_mass
+			var fill_mass = min(current_cell.mass, missing_mass)
+			below_cell.set_mass(below_cell.mass + fill_mass)
+			current_cell.set_mass(current_cell.mass - fill_mass)
 			return
 
 	# 处理左右为水的情况，随机选择一个平分质量
-	elif below_cell["type"] != "Water":
+	elif below_cell.type != "Water":
 		var left_col = col - 1
 		var right_col = col + 1
-		var gas_left = null
-		var gas_right = null
+		var cell_left = null
+		var cell_right = null
 
 		if left_col >= 0:
-			gas_left = grid[row][left_col]
+			cell_left = cells[row][left_col]
 		if right_col < grid_size.x:
-			gas_right = grid[row][right_col]
+			cell_right = cells[row][right_col]
 
 		# 如果左右有水
-		if gas_left and gas_right and gas_left["type"] == "Water" and gas_right["type"] == "Water":
-			var total_mass = current_cell["mass"] + gas_left["mass"] + gas_right["mass"]
+		if cell_left and cell_right and cell_left.type == "Water" and cell_right.type == "Water":
+			var total_mass = current_cell.mass + cell_left.mass + cell_right.mass
 			var avg_mass = total_mass / 3
 			# 平分质量
-			current_cell["mass"] = avg_mass
-			gas_left["mass"] = avg_mass
-			gas_right["mass"] = avg_mass
-		elif gas_left and gas_left["type"] == "Water":
-			var total_mass_left = current_cell["mass"] + gas_left["mass"]
+			current_cell.set_mass(avg_mass)
+			cell_left.set_mass(avg_mass)
+			cell_right.set_mass(avg_mass)
+		elif cell_left and cell_left.type == "Water":
+			var total_mass_left = current_cell.mass + cell_left.mass
 			var avg_mass_left = total_mass_left / 2
 			# 平分质量
-			current_cell["mass"] = avg_mass_left
-			gas_left["mass"] = avg_mass_left
-		elif gas_right and gas_right["type"] == "Water":
-			var total_mass_right = current_cell["mass"] + gas_right["mass"]
+			current_cell.set_mass(avg_mass_left)
+			cell_left.set_mass(avg_mass_left)
+		elif cell_right and cell_right.type == "Water":
+			var total_mass_right = current_cell.mass + cell_right.mass
 			var avg_mass_right = total_mass_right / 2
 			# 平分质量
-			current_cell["mass"] = avg_mass_right
-			gas_right["mass"] = avg_mass_right
+			current_cell.set_mass(avg_mass_right)
+			cell_right.set_mass(avg_mass_right)
 		return
 
 	# 下方是气体，且不是水或固体，进行交换
-	if below_cell["type"] != "Water" and below_cell["type"] != "Solid":
+	if below_cell.type != "Water" and below_cell.type != "Solid":
 		swap_elements(row, col, below_row, col)
 		return
 
@@ -202,10 +176,10 @@ func _physics_process(delta):
 		var neighbor_row = neighbor.x
 		var neighbor_col = neighbor.y
 
-		var gas1 = grid[rand_row][rand_col]
-		var gas2 = grid[neighbor_row][neighbor_col]
+		var cell1 = cells[rand_row][rand_col]
+		var cell2 = cells[neighbor_row][neighbor_col]
 
-		if gas1["type"] == gas2["type"] and gas1["type"] != "Solid":
+		if cell1.type == cell2.type and cell1.type != "Solid":
 			exchange_substance_mass(rand_row, rand_col, neighbor_row, neighbor_col)
 		else:
 			substance_density_swap(rand_row, rand_col, neighbor_row, neighbor_col)
@@ -213,21 +187,6 @@ func _physics_process(delta):
 	# 处理液体行为
 	for y in range(grid_size.y):
 		for x in range(grid_size.x):
-			if grid[y][x]["type"] == "Water":
+			var cell = cells[y][x]
+			if cell.type == "Water":
 				liquid_behavior(y, x)
-
-	# 更新每个格子的颜色和质量显示
-	for y in range(grid_size.y):
-		for x in range(grid_size.x):
-			var gas = grid[y][x]["type"]
-			var color = substance_colors[gas]
-			var sprite = sprites[y][x]
-			if gas=="Water":
-				sprite.get_node("TextureRect").material = liquid_shader.duplicate() as ShaderMaterial  # 每个实例有独立材质
-				# Calculate liquid_amount as mass divided by water density
-				var liquid_amount = grid[y][x]["mass"] / substance_densities["Water"]
-				sprite.get_node("TextureRect").material.set_shader_parameter("liquid_amount", liquid_amount)
-			else:
-				sprite.get_node("TextureRect").material.set_shader_parameter("cell_color", color)
-
-			sprite.get_node("MarginContainer").get_node("Label").text = str(round(grid[y][x]["mass"]))  # 更新标签的质量
