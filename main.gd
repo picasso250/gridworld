@@ -40,10 +40,7 @@ func get_cell_neighbors(row, col):
 	return neighbors
 
 # 交换相同类型气体的质量
-func exchange_substance_mass(row, col, neighbor_row, neighbor_col):
-	var cell1 = cells[row][col]
-	var cell2 = cells[neighbor_row][neighbor_col]
-
+func exchange_substance_mass(cell1, cell2):
 	if cell1.type == cell2.type and cell1.type != "Solid":
 		var total_mass = cell1.mass + cell2.mass
 		var new_mass = total_mass / 2
@@ -95,7 +92,7 @@ func filter_liquid_neighbors(neighbors):
 	return liquid_neighbors
 
 # 液体下落并填充缺少的质量
-func fall_liquid(current_cell,below_cell):
+func fall_liquid(current_cell, below_cell):
 	var density_threshold = template_cell.substance_densities["Water"]
 	var missing_mass = density_threshold - below_cell.mass
 	if missing_mass > 0:
@@ -116,19 +113,16 @@ func liquid_behavior(row, col):
 	var above_cell = cells[above_row][col] if (above_row >= 0) else null
 
 	# 如果当前格子的质量为 0 且正上方是气体，平分质量并更改类型
-	if current_cell.mass == 0 and above_cell and above_cell.phase == "Gas" :
+	if current_cell.mass == 0 and above_cell and above_cell.phase == "Gas":
 		var gas_type = above_cell.type
 		current_cell.set_type(gas_type)
 		current_cell.set_phase("Gas")
-		var total_mass = above_cell.mass
-		var avg_mass = total_mass / 2
-		current_cell.set_mass(avg_mass)
-		above_cell.set_mass(avg_mass)
+		exchange_substance_mass(current_cell, above_cell)
 		return
 
 	# 如果上方是液体，调用fall_liquid
 	if above_cell and above_cell.phase == "Liquid":
-		fall_liquid(current_cell, above_cell)
+		fall_liquid(above_cell, current_cell)
 		return
 
 	# 处理下方格子，如果下方有液体且其质量不足
@@ -159,11 +153,11 @@ func liquid_behavior(row, col):
 	if liquid_cells.size() > 0:
 		var selected_cell = liquid_cells[randi() % liquid_cells.size()]
 		# 使用 exchange_substance_mass 函数交换质量
-		exchange_substance_mass(row, col, selected_cell.x, selected_cell.y)
+		exchange_substance_mass(current_cell, selected_cell)
 		return
 
 	# 下方是气体且不是水或固体，进行交换
-	if below_cell.phase == "Gas" :
+	if below_cell.phase == "Gas":
 		swap_elements(row, col, below_row, col)
 		return
 
@@ -176,7 +170,7 @@ func _physics_process(delta):
 		var cell = cells[rand_row][rand_col]
 
 		# 处理气体
-		if cell.phase =="Gas":
+		if cell.phase == "Gas":
 			var neighbors = get_cell_neighbors(rand_row, rand_col)
 			var neighbor = neighbors[randi() % neighbors.size()]
 			var neighbor_row = neighbor.x
@@ -184,8 +178,8 @@ func _physics_process(delta):
 
 			var cell2 = cells[neighbor_row][neighbor_col]
 
-			if cell.type == cell2.type :
-				exchange_substance_mass(rand_row, rand_col, neighbor_row, neighbor_col)
+			if cell.type == cell2.type:
+				exchange_substance_mass(cell, cell2)
 			else:
 				substance_density_swap(rand_row, rand_col, neighbor_row, neighbor_col)
 		
