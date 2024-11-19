@@ -137,3 +137,11 @@ func swap(other_instance: Node):
 	other_instance.update_visuals()
 	other_instance.set_mass_display()
 	other_instance.tooltip_text = other_instance._get_tooltip_()
+	
+
+func _on_gui_input(event):
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			set_phase("Liquid")
+			set_type("Water")
+			set_mass(substance_densities["Water"])

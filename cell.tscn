@@ -36,8 +36,6 @@ offset_right = 128.0
 offset_bottom = 128.0
 tooltip_text = "lalala"
 script = ExtResource("1_hkqs8")
-type = "Water"
-phase = "Liquid"
 mass = 1.0
 gas_shader = SubResource("ShaderMaterial_8ltns")
 liquid_shader = SubResource("ShaderMaterial_i2yb8")
@@ -66,3 +64,5 @@ layout_mode = 2
 theme = SubResource("Theme_ft1d0")
 text = "333"
 horizontal_alignment = 1
+
+[connection signal="gui_input" from="." to="." method="_on_gui_input"]
