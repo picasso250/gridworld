@@ -9,8 +9,11 @@ void fragment() {
 
     vec4 color = liquid_color;
 
+    // 设置最小可见液体量为5%
+    float visible_amount = max(liquid_amount, 0.05);
+
     // 如果在液体范围内，显示液体的颜色
-    if (UV.y > (1.0 - liquid_amount)) {
+    if (UV.y > (1.0 - visible_amount)) {
         color.a = 1.0; // 完全不透明
     } else {
         color.a = 0.0; // 在液体之外是完全透明

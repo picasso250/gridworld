@@ -107,6 +107,7 @@ func liquid_behavior(row, col):
 	if current_cell.mass == 0 and above_cell and above_cell.type != "Water" and above_cell.type != "Solid":
 		var gas_type = above_cell.type
 		current_cell.set_type(gas_type)
+		current_cell.set_phase("Gas")
 		var total_mass = above_cell.mass
 		var avg_mass = total_mass / 2
 		current_cell.set_mass(avg_mass)
@@ -167,7 +168,7 @@ func liquid_behavior(row, col):
 # 在 _physics_process 中应用液体行为
 func _physics_process(delta):
 	# 随机选择 N 个格子并进行气体交换
-	var N = 1
+	var N =8
 	for i in range(N):
 		var rand_row = randi() % grid_size.y
 		var rand_col = randi() % grid_size.x

@@ -37,7 +37,7 @@ func _ready():
 	update_visuals()
 	set_mass_display()
 	tooltip_text = _get_tooltip_()
-	randomize_substance()
+	#randomize_substance()
 
 # 随机设置物质类型和相位
 func randomize_substance():
@@ -68,16 +68,14 @@ func randomize_substance():
 # 1. 网格元素设置（如类型、质量）
 # 设置物质类型
 func set_type(new_type: String):
-	if type!=new_type:
-		update_visuals()	
 	type = new_type
+	update_visuals()	
 	tooltip_text = _get_tooltip_()
 
 # 设置物质的三相状态（气、液、固）
 func set_phase(new_phase: String):
-	if phase!=new_phase:
-		update_visuals()	
 	phase = new_phase
+	update_visuals()	
 	tooltip_text = _get_tooltip_()
 
 # 设置质量
@@ -119,15 +117,18 @@ func swap(other_instance: Node):
 	var temp_type = type
 	var temp_phase = phase
 	var temp_mass = mass
-	
+	var temp_shader = get_node("TextureRect").material  # Save the shader material
+
 	type = other_instance.type
 	phase = other_instance.phase
 	mass = other_instance.mass
-	
+	get_node("TextureRect").material = other_instance.get_node("TextureRect").material  # Update the material to the swapped instance's material
+
 	other_instance.type = temp_type
 	other_instance.phase = temp_phase
 	other_instance.mass = temp_mass
-	
+	other_instance.get_node("TextureRect").material = temp_shader  # Restore the original material to the other instance
+
 	# 统一更新视觉效果和其他必要状态
 	update_visuals()
 	set_mass_display()
