@@ -107,7 +107,7 @@ func update_visuals():
 		texture_rect.material.set_shader_parameter("gas_color", color)
 
 func _get_tooltip_():
-	return type+"\n"+phase+"\n位置: (" + str(x) + ", " + str(y) + ")"
+	return type+"\n"+phase+"\n质量："+str(mass)+"\n位置: (" + str(x) + ", " + str(y) + ")"
 
 func swap(other_instance: Node):
 	if other_instance == null:
