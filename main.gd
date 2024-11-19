@@ -39,7 +39,7 @@ func get_cell_neighbors(row, col):
 				neighbors.append(Vector2(r, c))
 	return neighbors
 
-# 交换相同类型气体的质量
+# 交换相同类型物质的质量
 func exchange_substance_mass(cell1, cell2):
 	if cell1.type == cell2.type and cell1.type != "Solid":
 		var total_mass = cell1.mass + cell2.mass
@@ -51,7 +51,7 @@ func exchange_substance_mass(cell1, cell2):
 func swap_elements(a_row, a_col, b_row, b_col):
 	cells[a_row][a_col].swap(cells[b_row][b_col])
 
-# 密度基于交换气体位置
+# 基于密度交换气体位置
 func substance_density_swap(row, col, neighbor_row, neighbor_col):
 	var cell1 = cells[row][col]
 	var cell2 = cells[neighbor_row][neighbor_col]
@@ -105,11 +105,8 @@ func fall_liquid(current_cell, below_cell):
 func liquid_behavior(row, col):
 	var below_row = row + 1
 	var above_row = row - 1  # 正上方
-	if below_row >= grid_size.y:
-		return  # 底部边界
 
 	var current_cell = cells[row][col]
-	var below_cell = cells[below_row][col]
 	var above_cell = cells[above_row][col] if (above_row >= 0) else null
 
 	# 如果当前格子的质量为 0 且正上方是气体，平分质量并更改类型
@@ -125,41 +122,38 @@ func liquid_behavior(row, col):
 		fall_liquid(above_cell, current_cell)
 		return
 
-	# 处理下方格子，如果下方有液体且其质量不足
-	if below_cell.phase == "Liquid":
-		fall_liquid(current_cell, below_cell)
-		return
+	if below_row < grid_size.y:
+		var below_cell = cells[below_row][col]
+
+		# 处理下方格子，如果下方有液体
+		if below_cell.phase == "Liquid":
+			fall_liquid(current_cell, below_cell)
+			return
+
+		# 下方是气体，进行交换
+		elif below_cell.phase == "Gas":
+			swap_elements(row, col, below_row, col)
+			return
 
 	# 处理左右为液体的情况，优化后的逻辑
 	var left_col = col - 1
 	var right_col = col + 1
 	var cell_left = null
 	var cell_right = null
-	var liquid_cells = []
 
 	# 检查左边是否为液体
 	if left_col >= 0:
 		cell_left = cells[row][left_col]
 		if cell_left.phase == "Liquid":
-			liquid_cells.append(cell_left)
+			exchange_substance_mass(current_cell, cell_left)
+			return
 
 	# 检查右边是否为液体
 	if right_col < grid_size.x:
 		cell_right = cells[row][right_col]
 		if cell_right.phase == "Liquid":
-			liquid_cells.append(cell_right)
-
-	# 如果左右有液体，随机选择一个进行质量交换
-	if liquid_cells.size() > 0:
-		var selected_cell = liquid_cells[randi() % liquid_cells.size()]
-		# 使用 exchange_substance_mass 函数交换质量
-		exchange_substance_mass(current_cell, selected_cell)
-		return
-
-	# 下方是气体且不是水或固体，进行交换
-	if below_cell.phase == "Gas":
-		swap_elements(row, col, below_row, col)
-		return
+			exchange_substance_mass(current_cell, cell_right)
+			return
 
 func _physics_process(delta):
 	# 随机选择 N 个格子并根据物质类型进行处理
@@ -169,6 +163,10 @@ func _physics_process(delta):
 		var rand_col = randi() % grid_size.x
 		var cell = cells[rand_row][rand_col]
 
+		# 处理液体
+		if cell.phase == "Liquid":
+			liquid_behavior(rand_row, rand_col)
+			
 		# 处理气体
 		if cell.phase == "Gas":
 			var neighbors = get_cell_neighbors(rand_row, rand_col)
@@ -183,8 +181,4 @@ func _physics_process(delta):
 			else:
 				substance_density_swap(rand_row, rand_col, neighbor_row, neighbor_col)
 		
-		# 处理液体
-		elif cell.phase == "Liquid":
-			liquid_behavior(rand_row, rand_col)
-
 		# 固体不做处理，跳过
