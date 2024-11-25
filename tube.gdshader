@@ -2,13 +2,14 @@ shader_type canvas_item;
 
 uniform vec4 water_color = vec4(0.0, 0.0, 1.0, 1.0);  // 蓝色水
 uniform vec4 wall_color = vec4(0.8, 0.7, 0.5, 1.0);   // 土黄色管壁
-uniform float pipe_diameter : hint_range(0.01, 1.0) = 0.1; // 水管的直径 (相对于屏幕宽度或高度)
-uniform float wall_thickness : hint_range(0.01, 0.1) = 0.05; // 管壁的厚度
+uniform float pipe_diameter : hint_range(0.01, 1.0) = 0.4; // 水管的直径 (相对于屏幕宽度或高度)
+uniform float wall_thickness : hint_range(0.01, 0.2) = 0.1; // 管壁的厚度
 uniform int pipe_orientation : hint_range(0, 1) = 0; // 0: 横向, 1: 竖直
 
 void fragment() {
     float pipe_x_start, pipe_x_end, pipe_y_start, pipe_y_end;
     float wall_x_start, wall_x_end, wall_y_start, wall_y_end;
+    float water_x_start, water_x_end, water_y_start, water_y_end;
 
     // 横向水管 (pipe_orientation == 0)
     if (pipe_orientation == 0) {
@@ -23,6 +24,13 @@ void fragment() {
         // 水管的墙壁横向不变
         wall_x_start = 0.0;
         wall_x_end = 1.0;
+
+        // 水区域：宽高取最小值，保证是正方形
+        float water_size = min(pipe_y_end - pipe_y_start, pipe_x_end - pipe_x_start);
+        water_x_start = (1.0 - water_size) / 2.0;
+        water_x_end = water_x_start + water_size;
+        water_y_start = pipe_y_start;
+        water_y_end = pipe_y_end;
     }
     // 竖直水管 (pipe_orientation == 1)
     else {
@@ -37,6 +45,13 @@ void fragment() {
         // 水管的墙壁竖向不变
         wall_y_start = 0.0;
         wall_y_end = 1.0;
+
+        // 水区域：宽高取最小值，保证是正方形
+        float water_size = min(pipe_x_end - pipe_x_start, pipe_y_end - pipe_y_start);
+        water_y_start = (1.0 - water_size) / 2.0;
+        water_y_end = water_y_start + water_size;
+        water_x_start = pipe_x_start;
+        water_x_end = pipe_x_end;
     }
 
     // Check if the current fragment's UV lies within the pipe wall or water area
@@ -48,9 +63,14 @@ void fragment() {
             UV.y < pipe_y_start || UV.y > pipe_y_end) {
             COLOR = wall_color;  // 显示管壁的颜色
         }
-        // If inside the pipe, show the water color
-        else {
+        // If inside the pipe water square, show the water color
+        else if (UV.x >= water_x_start && UV.x <= water_x_end && 
+                 UV.y >= water_y_start && UV.y <= water_y_end) {
             COLOR = water_color;  // 显示水的颜色
+        }
+        // Else, discard if not inside either
+        else {
+            discard;  // 不在水管范围内的像素透明
         }
     } else {
         discard;  // 不在水管范围内的像素透明
