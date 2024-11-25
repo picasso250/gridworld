@@ -5,11 +5,15 @@ uniform vec4 wall_color = vec4(0.8, 0.7, 0.5, 1.0);   // 土黄色管壁
 uniform float pipe_diameter : hint_range(0.01, 1.0) = 0.4; // 水管的直径 (相对于屏幕宽度或高度)
 uniform float wall_thickness : hint_range(0.01, 0.2) = 0.1; // 管壁的厚度
 uniform int pipe_orientation : hint_range(0, 1) = 0; // 0: 横向, 1: 竖直
+uniform float water_speed : hint_range(0.0, 1.0) = 0.5;  // 水的移动速度
 
 void fragment() {
     float pipe_x_start, pipe_x_end, pipe_y_start, pipe_y_end;
     float wall_x_start, wall_x_end, wall_y_start, wall_y_end;
     float water_x_start, water_x_end, water_y_start, water_y_end;
+
+    // 修改此处，使time_offset的范围变为[-1, 1]
+    float time_offset = fract(TIME * water_speed) * 2.0 - 1.0; 
 
     // 横向水管 (pipe_orientation == 0)
     if (pipe_orientation == 0) {
@@ -27,7 +31,7 @@ void fragment() {
 
         // 水区域：宽高取最小值，保证是正方形
         float water_size = min(pipe_y_end - pipe_y_start, pipe_x_end - pipe_x_start);
-        water_x_start = (1.0 - water_size) / 2.0;
+        water_x_start = (1.0 - water_size) / 2.0 + time_offset; // 动态的x偏移，使用fract保证水在[0, 1]区间内循环
         water_x_end = water_x_start + water_size;
         water_y_start = pipe_y_start;
         water_y_end = pipe_y_end;
@@ -48,7 +52,7 @@ void fragment() {
 
         // 水区域：宽高取最小值，保证是正方形
         float water_size = min(pipe_x_end - pipe_x_start, pipe_y_end - pipe_y_start);
-        water_y_start = (1.0 - water_size) / 2.0;
+        water_y_start = (1.0 - water_size) / 2.0 + time_offset; // 动态的y偏移，使用fract保证水在[0, 1]区间内循环
         water_y_end = water_y_start + water_size;
         water_x_start = pipe_x_start;
         water_x_end = pipe_x_end;

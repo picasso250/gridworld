@@ -9,7 +9,8 @@ shader_parameter/water_color = Vector4(0, 0, 1, 1)
 shader_parameter/wall_color = Vector4(0.8, 0.7, 0.5, 1)
 shader_parameter/pipe_diameter = 0.4
 shader_parameter/wall_thickness = 0.1
-shader_parameter/pipe_orientation = 1
+shader_parameter/pipe_orientation = 0
+shader_parameter/water_speed = 0.475
 
 [node name="Tube" type="Sprite2D"]
 material = SubResource("ShaderMaterial_7ym4q")
