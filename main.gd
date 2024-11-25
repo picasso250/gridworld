@@ -53,113 +53,53 @@ func exchange_substance_mass(cell1, cell2):
 # 交换元素的通用函数
 func swap_elements(a_row, a_col, b_row, b_col):
 	cells[a_row][a_col].swap(cells[b_row][b_col])
+	
+# 根据物质类型处理不同的行为
+func handle_vacuum(row, col):
+	# 真空不做任何处理
+	pass
 
-# 基于密度交换气体位置
-func substance_density_swap(row, col, neighbor_row, neighbor_col):
-	var cell1 = cells[row][col]
-	var cell2 = cells[neighbor_row][neighbor_col]
+func handle_air(row, col):
+	var neighbors = get_cell_neighbors(row, col)
+	var gas_neighbors = []
+	for neighbor in neighbors:
+		var neighbor_cell = cells[neighbor.x][neighbor.y]
+		if neighbor_cell.phase == "Gas":
+			gas_neighbors.append(neighbor)
+	
+	if gas_neighbors.size() > 0:
+		var random_neighbor = gas_neighbors[randi() % gas_neighbors.size()]
+		swap_elements(row, col, random_neighbor.x, random_neighbor.y)
 
-	if cell1.type != "Gas" or cell2.type != "Gas":
-		return
-
-	if row == neighbor_row:  # 同行
-		swap_elements(row, col, neighbor_row, neighbor_col)
-		return
-
-	if cell1.type != cell2.type:  # 不同气体
-		var density1 = template_cell.substance_densities[cell1.type]
-		var density2 = template_cell.substance_densities[cell2.type]
-
-		if row < neighbor_row:
-			if density1 > density2:
-				swap_elements(row, col, neighbor_row, neighbor_col)
-		elif row > neighbor_row:
-			if density1 < density2:
-				swap_elements(row, col, neighbor_row, neighbor_col)
-
-func debug_grid():
-	for y in range(grid_size.y):
-		var row = ""
-		for x in range(grid_size.x):
-			var cell = cells[y][x]
-			row += cell.type + " "
-		print(row)
-
-# 辅助函数：过滤邻居格子
-func filter_liquid_neighbors(neighbors):
+func handle_liquid(row, col):
+	var neighbors = get_cell_neighbors(row, col)
 	var liquid_neighbors = []
 	for neighbor in neighbors:
-		var cell = cells[neighbor.x][neighbor.y]
-		if cell.type == "Water":
+		var neighbor_cell = cells[neighbor.x][neighbor.y]
+		if neighbor_cell.phase == "Liquid":
 			liquid_neighbors.append(neighbor)
-	return liquid_neighbors
+	
+	if liquid_neighbors.size() > 0:
+		var random_neighbor = liquid_neighbors[randi() % liquid_neighbors.size()]
+		swap_elements(row, col, random_neighbor.x, random_neighbor.y)
 
-# 液体下落并填充缺少的质量
-func fall_liquid(current_cell, below_cell):
-	var density_threshold = template_cell.substance_densities["Water"]
-	var missing_mass = density_threshold - below_cell.mass
-	if missing_mass > 0:
-		# 填满正下方格子
-		var fill_mass = min(current_cell.mass, missing_mass)
-		below_cell.set_mass(below_cell.mass + fill_mass)
-		current_cell.set_mass(current_cell.mass - fill_mass)
+func handle_solid(row, col):
+	# 固体不做处理
+	pass
 
-# 检查8个邻居是否有气体
-func find_gas_neighbor(row, col) -> Node:
-	for r in range(row - 1, row + 2):
-		for c in range(col - 1, col + 2):
-			if r >= 0 and r < grid_size.y and c >= 0 and c < grid_size.x and (r != row or c != col):
-				var neighbor_cell = cells[r][c]
-				if neighbor_cell.phase == "Gas":
-					return neighbor_cell
-	return null
+# 处理单个格子的行为
+func process_cell(row, col):
+	var cell = cells[row][col]
 
-func liquid_behavior(row, col):
-	var below_row = row + 1
-	var above_row = row - 1  # 正上方
-	var left_col = col - 1
-	var right_col = col + 1
-	var cell_left = 		 cells[row][left_col] if left_col >= 0 else null
-	var cell_right = 		 cells[row][right_col] if right_col < grid_size.x else null
-
-	var current_cell = cells[row][col]
-	var above_cell = cells[above_row][col] if (above_row >= 0) else null
-	var below_cell = cells[below_row][col] if (below_row < grid_size.y) else null
-
-	if current_cell.mass < EPSILON:
-		current_cell.set_phase_and_type("Vacuum","Vacuum")
-
-	# 如果上方是液体，调用fall_liquid
-	elif above_cell and above_cell.phase == "Liquid":
-		fall_liquid(above_cell, current_cell)
-		return
-
-	# 处理下方格子，如果下方有液体
-	elif below_cell and below_cell.phase == "Liquid":
-		fall_liquid(current_cell, below_cell)
-
-	# 下方是气体，进行交换
-	elif below_cell and below_cell.phase == "Gas":
-		swap_elements(row, col, below_row, col)
-		return
-
-	# 检查左边
-	if cell_left:
-		if cell_left.phase == "Liquid":
-			exchange_substance_mass(current_cell, cell_left)
-		elif cell_left.phase == "Gas":
-			cell_left.set_phase_and_type(current_cell.phase, current_cell.type)
-			cell_left.set_mass(0)
-			exchange_substance_mass(current_cell, cell_left)
-
-	# 检查右边
-	elif cell_right:
-		if cell_right.phase == "Liquid":
-			exchange_substance_mass(current_cell, cell_right)
-		elif cell_right.phase == "Gas":
-			cell_right.set_phase_and_type(current_cell.phase, current_cell.type)
-			cell_right.set_mass(0)
-			exchange_substance_mass(current_cell, cell_right)
+	# 根据物质相，选择相应的处理函数
+	if cell.phase == "Vacuum":
+		handle_vacuum(row, col)
+	elif cell.phase == "Air":
+		handle_air(row, col)
+	elif cell.phase == "Liquid":
+		handle_liquid(row, col)
+	elif cell.phase == "Solid":
+		handle_solid(row, col)
 
 func _physics_process(delta):
 	# 随机选择 N 个格子并根据物质类型进行处理
@@ -167,24 +107,6 @@ func _physics_process(delta):
 	for i in range(N):
 		var rand_row = randi() % grid_size.y
 		var rand_col = randi() % grid_size.x
-		var cell = cells[rand_row][rand_col]
 
-		# 处理液体
-		if cell.phase == "Liquid":
-			liquid_behavior(rand_row, rand_col)
-			
-		# 处理气体
-		elif cell.phase == "Gas":
-			var neighbors = get_cell_neighbors(rand_row, rand_col)
-			var neighbor = neighbors[randi() % neighbors.size()]
-			var neighbor_row = neighbor.x
-			var neighbor_col = neighbor.y
-
-			var cell2 = cells[neighbor_row][neighbor_col]
-
-			if cell.type == cell2.type:
-				exchange_substance_mass(cell, cell2)
-			else:
-				substance_density_swap(rand_row, rand_col, neighbor_row, neighbor_col)
-		
-		# 固体不做处理，跳过
+		# 处理该格子
+		process_cell(rand_row, rand_col)
