@@ -3,10 +3,7 @@ extends Control
 @export var type: String = "Oxygen"
 @export var phase: String = "Gas"  # 三相状态（气液固）
 @export var mass: float = 50.0
-@export var gas_shader: ShaderMaterial
-@export var liquid_shader: ShaderMaterial
-@export var solid_shader: ShaderMaterial
-@export var vacuum_shader: ShaderMaterial  # New shader for vacuum
+@export var merged_shader: ShaderMaterial  # 合并后的Shader
 @export var x = 0
 @export var y = 0
 
@@ -82,11 +79,13 @@ func set_phase(new_phase: String):
 		phase = new_phase
 		update_visuals()	
 		tooltip_text = _get_tooltip_()
-func set_phase_and_type(new_phase: String,new_type: String):
+
+func set_phase_and_type(new_phase: String, new_type: String):
 	type = new_type
 	phase = new_phase
 	update_visuals()	
 	tooltip_text = _get_tooltip_()
+
 # 设置质量
 func set_mass(new_mass: float):
 	mass = new_mass
@@ -102,21 +101,29 @@ func set_mass_display():
 # 更新显示内容
 func update_visuals():
 	var texture_rect = get_node("TextureRect")
+	
+	# 根据相位选择不同的显示效果
 	if phase == "Liquid":
-		texture_rect.material = liquid_shader.duplicate()
+		# 对于液体，传递液体量
+		texture_rect.material = merged_shader.duplicate()
+		texture_rect.material.set_shader_parameter("type", 1)  # 设置相位为液体
 		texture_rect.material.set_shader_parameter("liquid_amount", mass / substance_densities["Water"])
+		texture_rect.material.set_shader_parameter("liquid_color", substance_colors[type])  # 设置液体颜色
 	elif phase == "Solid":
-		texture_rect.material = solid_shader.duplicate()
-		var color = substance_colors[type]
-		texture_rect.material.set_shader_parameter("solid_color", color)
+		# 对于固体，传递固体颜色
+		texture_rect.material = merged_shader.duplicate()
+		texture_rect.material.set_shader_parameter("type", 0)  # 设置相位为固体
+		texture_rect.material.set_shader_parameter("solid_color", substance_colors[type])
 	elif phase == "Vacuum":
-		# Vacuum uses the solid shader with a vacuum color
-		texture_rect.material = solid_shader.duplicate()
-		texture_rect.material.set_shader_parameter("solid_color", substance_colors["Vacuum"])
-	else: # 默认气态
-		texture_rect.material = gas_shader.duplicate()
-		var color = substance_colors[type]
-		texture_rect.material.set_shader_parameter("gas_color", color)
+		# 对于真空，传递真空颜色
+		texture_rect.material = merged_shader.duplicate()
+		texture_rect.material.set_shader_parameter("type", 3)  # 设置相位为真空
+		# texture_rect.material.set_shader_parameter("solid_color", substance_colors["Vacuum"])  # 真空的颜色
+	else:  # 默认气态
+		# 对于气体，传递气体颜色
+		texture_rect.material = merged_shader.duplicate()
+		texture_rect.material.set_shader_parameter("type", 2)  # 设置相位为气体
+		texture_rect.material.set_shader_parameter("gas_color", substance_colors[type])
 
 func _get_tooltip_():
 	return type + "\n" + phase + "\n质量：" + str(mass) + "\n位置: (" + str(x) + ", " + str(y) + ")"
