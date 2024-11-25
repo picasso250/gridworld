@@ -12,6 +12,7 @@ shader_parameter/pipe_diameter = 0.4
 shader_parameter/wall_thickness = 0.162
 shader_parameter/pipe_orientation = 0
 shader_parameter/water_speed = 0.7
+shader_parameter/show_wall = false
 
 [node name="Tube" type="Sprite2D"]
 material = SubResource("ShaderMaterial_7ym4q")

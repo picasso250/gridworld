@@ -7,6 +7,7 @@ uniform float pipe_diameter : hint_range(0.01, 1.0) = 0.4; // 水管的直径 (�
 uniform float wall_thickness : hint_range(0.01, 0.2) = 0.1; // 管壁的厚度
 uniform int pipe_orientation : hint_range(0, 1) = 0; // 0: 横向, 1: 竖直
 uniform float water_speed : hint_range(0.0, 1.0) = 0.5;  // 水的移动速度
+uniform bool show_wall = true; // 是否显示管壁
 
 void fragment() {
     float pipe_x_start, pipe_x_end, pipe_y_start, pipe_y_end;
@@ -77,9 +78,9 @@ void fragment() {
     if (UV.x >= wall_x_start && UV.x <= wall_x_end && 
         UV.y >= wall_y_start && UV.y <= wall_y_end) {
 
-        // 如果当前片元在管壁区域，显示管壁颜色
-        if (UV.x < pipe_x_start || UV.x > pipe_x_end || 
-            UV.y < pipe_y_start || UV.y > pipe_y_end) {
+        // 如果当前片元在管壁区域，且需要显示管壁
+        if (show_wall && (UV.x < pipe_x_start || UV.x > pipe_x_end || 
+            UV.y < pipe_y_start || UV.y > pipe_y_end)) {
             COLOR = wall_color;  // 显示管壁的颜色
         }
         // 如果当前片元在水流区域或其平铺部分内，显示水的颜色
