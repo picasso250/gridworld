@@ -126,15 +126,8 @@ func liquid_behavior(row, col):
 	var above_cell = cells[above_row][col] if (above_row >= 0) else null
 	var below_cell = cells[below_row][col] if (below_row < grid_size.y) else null
 
-	# 使用 find_gas_neighbor 函数来检查邻居是否有气体
-	var gas_cell = find_gas_neighbor(row, col)
-
-	# 如果找到气体，平分质量并更改类型
-	if current_cell.mass < EPSILON and gas_cell:
-		var gas_type = gas_cell.type
-		current_cell.set_type(gas_type)
-		current_cell.set_phase("Gas")
-		exchange_substance_mass(current_cell, gas_cell)
+	if current_cell.mass < EPSILON:
+		current_cell.set_phase_and_type("Vacuum","Vacuum")
 
 	# 如果上方是液体，调用fall_liquid
 	elif above_cell and above_cell.phase == "Liquid":
@@ -155,20 +148,18 @@ func liquid_behavior(row, col):
 		if cell_left.phase == "Liquid":
 			exchange_substance_mass(current_cell, cell_left)
 		elif cell_left.phase == "Gas":
-			cell_left.set_phase(current_cell.phase)
-			cell_left.set_type(current_cell.type)
+			cell_left.set_phase_and_type(current_cell.phase, current_cell.type)
 			cell_left.set_mass(0)
-			exchange_substance_mass(current_cell,cell_left)
+			exchange_substance_mass(current_cell, cell_left)
 
 	# 检查右边
 	elif cell_right:
 		if cell_right.phase == "Liquid":
 			exchange_substance_mass(current_cell, cell_right)
 		elif cell_right.phase == "Gas":
-			cell_right.set_phase(current_cell.phase)
-			cell_right.set_type(current_cell.type)
+			cell_right.set_phase_and_type(current_cell.phase, current_cell.type)
 			cell_right.set_mass(0)
-			exchange_substance_mass(current_cell,cell_right)
+			exchange_substance_mass(current_cell, cell_right)
 
 func _physics_process(delta):
 	# 随机选择 N 个格子并根据物质类型进行处理
