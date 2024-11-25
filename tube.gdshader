@@ -1,7 +1,8 @@
 shader_type canvas_item;
 
-uniform vec4 water_color = vec4(0.0, 0.0, 1.0, 1.0);  // 蓝色水
-uniform vec4 wall_color = vec4(0.8, 0.7, 0.5, 1.0);   // 土黄色管壁
+uniform vec4 water_color = vec4(0.5, 0.8, 1.0, 1.0);  // 浅蓝色水
+uniform vec4 wall_color = vec4(0.6, 0.5, 0.45, 1.0);   // 暖灰色管壁
+
 uniform float pipe_diameter : hint_range(0.01, 1.0) = 0.4; // 水管的直径 (相对于屏幕宽度或高度)
 uniform float wall_thickness : hint_range(0.01, 0.2) = 0.1; // 管壁的厚度
 uniform int pipe_orientation : hint_range(0, 1) = 0; // 0: 横向, 1: 竖直
