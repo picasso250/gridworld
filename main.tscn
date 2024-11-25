@@ -4,7 +4,3 @@
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_pu17l")
-
-[node name="TooltipLabel" type="Label" parent="."]
-offset_right = 40.0
-offset_bottom = 23.0
