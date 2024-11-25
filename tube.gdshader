@@ -11,68 +11,84 @@ void fragment() {
     float pipe_x_start, pipe_x_end, pipe_y_start, pipe_y_end;
     float wall_x_start, wall_x_end, wall_y_start, wall_y_end;
     float water_x_start, water_x_end, water_y_start, water_y_end;
+    float water_x_start2, water_x_end2, water_y_start2, water_y_end2;
 
-    // 修改此处，使time_offset的范围变为[-1, 1]
-    float time_offset = fract(TIME * water_speed) * 2.0 - 1.0; 
+    // 修改此处，使time_offset的范围变为[0, 1)
+    float time_offset = fract(TIME * water_speed);  // 让水流在[0, 1)范围内平铺
 
     // 横向水管 (pipe_orientation == 0)
     if (pipe_orientation == 0) {
-        pipe_x_start = 0.0;  // 左边界，管子横向时从左到右
-        pipe_x_end = 1.0;    // 右边界，管子横向时从左到右
-        pipe_y_start = (1.0 - pipe_diameter) / 2.0; // 水管的上下范围
-        pipe_y_end = pipe_y_start + pipe_diameter;  // 水管的上下范围
+        pipe_x_start = 0.0;
+        pipe_x_end = 1.0;
+        pipe_y_start = (1.0 - pipe_diameter) / 2.0;
+        pipe_y_end = pipe_y_start + pipe_diameter;
 
         // 管壁的y范围
         wall_y_start = pipe_y_start - wall_thickness;
         wall_y_end = pipe_y_end + wall_thickness;
-        // 水管的墙壁横向不变
         wall_x_start = 0.0;
         wall_x_end = 1.0;
 
         // 水区域：宽高取最小值，保证是正方形
         float water_size = min(pipe_y_end - pipe_y_start, pipe_x_end - pipe_x_start);
-        water_x_start = (1.0 - water_size) / 2.0 + time_offset; // 动态的x偏移，使用fract保证水在[0, 1]区间内循环
+        
+        // 水流的X轴偏移，周期性平铺
+        water_x_start = fract((1.0 - water_size) / 2.0 + time_offset);  // 循环在[0, 1)范围
         water_x_end = water_x_start + water_size;
         water_y_start = pipe_y_start;
         water_y_end = pipe_y_end;
+
+        // 计算第二个水流区域，它将在第一个区域的右侧平铺
+        water_x_start2 = water_x_start - 1.0;  // 从左边接续
+        water_x_end2 = water_x_start2 + water_size;
+        water_y_start2 = pipe_y_start;
+        water_y_end2 = pipe_y_end;
     }
     // 竖直水管 (pipe_orientation == 1)
     else {
-        pipe_x_start = (1.0 - pipe_diameter) / 2.0;  // 左边界，管子竖直时从上到下
-        pipe_x_end = pipe_x_start + pipe_diameter;   // 右边界，管子竖直时从上到下
-        pipe_y_start = 0.0;                          // 水管的上下范围
-        pipe_y_end = 1.0;                            // 水管的上下范围
+        pipe_x_start = (1.0 - pipe_diameter) / 2.0;
+        pipe_x_end = pipe_x_start + pipe_diameter;
+        pipe_y_start = 0.0;
+        pipe_y_end = 1.0;
 
-        // 管壁的x范围
         wall_x_start = pipe_x_start - wall_thickness;
         wall_x_end = pipe_x_end + wall_thickness;
-        // 水管的墙壁竖向不变
         wall_y_start = 0.0;
         wall_y_end = 1.0;
 
         // 水区域：宽高取最小值，保证是正方形
         float water_size = min(pipe_x_end - pipe_x_start, pipe_y_end - pipe_y_start);
-        water_y_start = (1.0 - water_size) / 2.0 + time_offset; // 动态的y偏移，使用fract保证水在[0, 1]区间内循环
+        
+        // 水流的Y轴偏移，周期性平铺
+        water_y_start = fract((1.0 - water_size) / 2.0 + time_offset);  // 循环在[0, 1)范围
         water_y_end = water_y_start + water_size;
         water_x_start = pipe_x_start;
         water_x_end = pipe_x_end;
+
+        // 计算第二个水流区域，它将在第一个区域的下方平铺
+        water_y_start2 = water_y_start - 1.0;  // 从下方接续
+        water_y_end2 = water_y_start2 + water_size;
+        water_x_start2 = pipe_x_start;
+        water_x_end2 = pipe_x_end;
     }
 
-    // Check if the current fragment's UV lies within the pipe wall or water area
+    // 检查当前片元是否在水流区域或其平铺部分内
     if (UV.x >= wall_x_start && UV.x <= wall_x_end && 
         UV.y >= wall_y_start && UV.y <= wall_y_end) {
 
-        // If inside the pipe wall, show the wall color
+        // 如果当前片元在管壁区域，显示管壁颜色
         if (UV.x < pipe_x_start || UV.x > pipe_x_end || 
             UV.y < pipe_y_start || UV.y > pipe_y_end) {
             COLOR = wall_color;  // 显示管壁的颜色
         }
-        // If inside the pipe water square, show the water color
-        else if (UV.x >= water_x_start && UV.x <= water_x_end && 
-                 UV.y >= water_y_start && UV.y <= water_y_end) {
+        // 如果当前片元在水流区域或其平铺部分内，显示水的颜色
+        else if ((UV.x >= water_x_start && UV.x <= water_x_end && 
+                  UV.y >= water_y_start && UV.y <= water_y_end) ||
+                 (UV.x >= water_x_start2 && UV.x <= water_x_end2 && 
+                  UV.y >= water_y_start2 && UV.y <= water_y_end2)) {
             COLOR = water_color;  // 显示水的颜色
         }
-        // Else, discard if not inside either
+        // 否则，丢弃该片元
         else {
             discard;  // 不在水管范围内的像素透明
         }
