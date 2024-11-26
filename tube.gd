@@ -91,7 +91,7 @@ func get_base_vector(direction: Direction):
 func get_edge_position(direction: Direction):
 	match direction:
 		Direction.RIGHT: return Vector2(1, 0.5)
-		Direction.UP: return Vector2(0.5, -1)
-		Direction.LEFT: return Vector2(-1, 0.5)
+		Direction.UP: return Vector2(0.5, 0)
+		Direction.LEFT: return Vector2(0, 0.5)
 		Direction.DOWN: return Vector2(0.5, 1)
 		_: return Vector2(0, 0)
