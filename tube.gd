@@ -8,16 +8,17 @@ extends Node2D
 @export var is_horizontal = true # 是否为水平管道
 
 func _draw():
+	var water_size = pipe_width - 2 * pipe_thickness
 	if is_horizontal:
 		# 设置绘制土黄色的水平管壁
 		draw_rect(Rect2(Vector2(0, 0), Vector2(cell_width, pipe_width)), Color(0.545, 0.271, 0.075, 1))
 		# 设置绘制蓝色的水平水
-		draw_rect(Rect2(Vector2(0, pipe_thickness), Vector2(cell_width, pipe_width - 2 * pipe_thickness)), Color(0, 0, 1, 1))
+		draw_rect(Rect2(Vector2(0, pipe_thickness), Vector2(water_size, water_size)), Color(0, 0, 1, 1))
 	else:
 		# 设置绘制土黄色的竖直管壁
 		draw_rect(Rect2(Vector2(0, 0), Vector2(pipe_width, cell_width)), Color(0.545, 0.271, 0.075, 1))
 		# 设置绘制蓝色的竖直水
-		draw_rect(Rect2(Vector2(pipe_thickness, 0), Vector2(pipe_width - 2 * pipe_thickness, cell_width)), Color(0, 0, 1, 1))
+		draw_rect(Rect2(Vector2(pipe_thickness, 0), Vector2(water_size, water_size)), Color(0, 0, 1, 1))
 
 func _ready():
 	pass
