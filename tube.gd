@@ -2,9 +2,9 @@ extends Node2D
 
 @export var x = 0
 @export var y = 0
-@export var cell_width = 64 # 格子宽度
-@export var pipe_width = 32 # 水管直径
-@export var pipe_thickness = 4 # 水管壁厚度
+@export var cell_width:float = 64 # 格子宽度
+@export var pipe_width:float = 32 # 水管直径
+@export var pipe_thickness:float = 4 # 水管壁厚度
 @export var is_horizontal = true # 是否为水平管道
 @export var debug = false # 是否开启调试模式
 
