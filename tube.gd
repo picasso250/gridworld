@@ -19,43 +19,61 @@ enum Movement { OUTWARD, INWARD }
 
 var water_pos_init_center: Vector2 = Vector2(0.5, 0.5)
 var water_pos: Vector2 = water_pos_init_center
-@export var speed: float = 0.5  # The speed is now a float between 0 and 1
+var water2_pos: Vector2 = water_pos_init_center  # Second water position
+
+@export var speed: float = 0.5
 @export var animation_direction: Direction = Direction.RIGHT
-@export var animation_movement: Movement = Movement.OUTWARD # Added parameter for inward/outward
+@export var animation_movement: Movement = Movement.OUTWARD
+
+@export var animation2_direction: Direction = Direction.LEFT  # Second water direction
+@export var animation2_movement: Movement = Movement.OUTWARD  # Second water movement
 
 func _ready():
 	# Set initial shader parameters
 	material.set_shader_parameter("pipe_size", pipe_width)
-	#shader_material.set_shader_parameter("water_size", water_size)
 	material.set_shader_parameter("pipe_color", pipe_color)
 	material.set_shader_parameter("water_color", water_color)
-	
+
+	# Set initial water positions based on their directions and movements
 	if animation_movement == Movement.OUTWARD:
 		water_pos = water_pos_init_center
-	else: # INWARD
+	else:
 		water_pos = get_edge_position(animation_direction)
 
-func _draw():
-	# We don't need to draw anything manually here anymore
-	pass
+	if animation2_movement == Movement.OUTWARD:
+		water2_pos = water_pos_init_center
+	else:
+		water2_pos = get_edge_position(animation2_direction)
 
 func _process(delta):
-	# Calculate the direction vector
+	# Calculate direction vectors for both waters
 	var direction_vector = get_direction_vector(animation_direction, animation_movement)
-	
-	# Adjust water position based on speed (directly moving within 0-1 range)
-	water_pos += direction_vector * speed * delta
+	var direction2_vector = get_direction_vector(animation2_direction, animation2_movement)
 
-	# Check if the water has reached the boundary (0 to 1 range)
+	# Adjust water positions based on speed (directly moving within 0-1 range)
+	water_pos += direction_vector * speed * delta
+	water2_pos += direction2_vector * speed * delta
+
+	# Check if water 1 has reached the boundary (0 to 1 range)
 	if animation_movement == Movement.OUTWARD:
 		if water_pos.x > 1 or water_pos.y > 1 or water_pos.x < 0 or water_pos.y < 0:
 			water_pos = water_pos_init_center  # Reset to center if out of bounds
-	else: # INWARD
-		if abs(water_pos.x) < 0.05 and abs(water_pos.y) < 0.05:  # Close enough to center
+	else:
+		const WATER_POSITION_THRESHOLD = 0.005
+		if abs(water_pos.x - 0.5) < WATER_POSITION_THRESHOLD and abs(water_pos.y - 0.5) < WATER_POSITION_THRESHOLD:
 			water_pos = get_edge_position(animation_direction)
 
-	# Update water position in shader (no need to normalize, it's already 0-1)
+	# Check if water 2 has reached the boundary
+	if animation2_movement == Movement.OUTWARD:
+		if water2_pos.x > 1 or water2_pos.y > 1 or water2_pos.x < 0 or water2_pos.y < 0:
+			water2_pos = water_pos_init_center  # Reset to center if out of bounds
+	else:
+		if abs(water2_pos.x - 0.5) < WATER_POSITION_THRESHOLD and abs(water2_pos.y - 0.5) < WATER_POSITION_THRESHOLD:
+			water2_pos = get_edge_position(animation2_direction)
+
+	# Update both water positions in the shader
 	material.set_shader_parameter("water_center", water_pos)
+	material.set_shader_parameter("water2_center", water2_pos)
 
 func get_direction_vector(direction: Direction, movement: Movement):
 	var base_vector = get_base_vector(direction)
@@ -75,8 +93,6 @@ func get_base_vector(direction: Direction):
 			return Vector2(0, 0)
 
 func get_edge_position(direction: Direction):
-	# Since the water_pos is already in range 0-1, this function might not be needed
-	# unless it's for resetting or handling specific edge scenarios.
 	match direction:
 		Direction.RIGHT: return Vector2(1, 0.5)
 		Direction.UP: return Vector2(0.5, -1)
