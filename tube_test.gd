@@ -3,13 +3,11 @@ extends Node2D
 @export var grid_size: Vector2i = Vector2i(4, 4)  # n x m grid size
 @export var cell_size: Vector2 = Vector2(64, 64)  # Each cell size
 
-
-
 # Stores the tube grid
 var tubes = []
 
 func _ready():
-	var template_tube = $Tube
+	var template_tube = $Tube as Control
 	# Initialize grid data
 	for y in range(grid_size.y):
 		var row = []
@@ -19,10 +17,11 @@ func _ready():
 
 			# Set the position and scale of the tube
 			tube.position = Vector2(x, y) * cell_size
-			#tube.scale = cell_size / Vector2(128, 128)  # Adjust scale based on grid size
 			tube.visible = true
-			#tube.x = y
-			#tube.y = x
+			tube.set_show_center_circle(false)
+			tube.x = y
+			tube.y = x
+			tube.material = template_tube.material.duplicate()
 			add_child(tube)
 
 			# Add the newly created tube to the tubes grid

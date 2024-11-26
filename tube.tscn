@@ -18,10 +18,10 @@ shader_parameter/show_center_circle = true
 material = SubResource("ShaderMaterial_jubco")
 offset_right = 64.0
 offset_bottom = 64.0
+tooltip_text = "ssfe"
 script = ExtResource("3_kiw3i")
 debug = true
-animation_direction = 2
-animation_movement = 1
-animation2_direction = 0
 
 [node name="Timer" type="Timer" parent="."]
+
+[connection signal="gui_input" from="." to="." method="_on_gui_input"]
