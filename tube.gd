@@ -12,8 +12,9 @@ extends Node2D
 @export var debug: bool = false # 是否开启调试模式
 
 # 参数化颜色
-@export var pipe_color: Color = Color(0.545, 0.271, 0.075, 1) # 管壁颜色 (土黄色)
-@export var water_color: Color = Color(0, 0, 1, 1) # 水的颜色 (蓝色)
+@export var pipe_color: Color = Color(0.2, 0.1, 0.04, 1)  # 管壁颜色 (古铜色)
+@export var water_color: Color = Color(0.2, 0.6, 1.0, 1)  # 水的颜色 (鲜亮的蓝绿色)
+
 var water_size = pipe_width - pipe_thickness * 2 # 水的大小
 
 var water_pos: Vector2 = Vector2(-water_size / 2, -water_size / 2)  # 水的初始位置
