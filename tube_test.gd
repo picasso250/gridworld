@@ -3,12 +3,13 @@ extends Node2D
 @export var grid_size: Vector2i = Vector2i(4, 4)  # n x m grid size
 @export var cell_size: Vector2 = Vector2(64, 64)  # Each cell size
 
-var template_tube = preload("res://tube.tscn").instantiate()
+
 
 # Stores the tube grid
 var tubes = []
 
 func _ready():
+	var template_tube = $Tube
 	# Initialize grid data
 	for y in range(grid_size.y):
 		var row = []
