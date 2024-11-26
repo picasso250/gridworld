@@ -4,4 +4,15 @@
 
 [node name="Tube" type="Node2D"]
 script = ExtResource("3_kiw3i")
+x = null
+y = null
+cell_width = null
+pipe_width = null
+pipe_thickness = null
+draw_left_pipe = null
+draw_right_pipe = null
+draw_top_pipe = null
+draw_bottom_pipe = null
 debug = true
+pipe_color = null
+water_color = null
