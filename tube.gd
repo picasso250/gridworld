@@ -68,9 +68,6 @@ func start_water_tween(
 
 	# Animate the movement of water
 	tween.tween_property(self, water_property, end_position, animation_duration)
-	tween.set_loops()
-
-	tween.connect("step_finished", _on_tween_completed)
 
 func _on_tween_completed(tween: Tween, key: String):
 	# 动画完成时手动重置位置

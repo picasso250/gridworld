@@ -10,6 +10,7 @@ uniform float water_size : hint_range(0.01, 1.0) = 0.2;  // 水的大小
 uniform vec2 water_center = vec2(0.5, 0.5);  // 水的中心位置
 uniform vec2 water2_center = vec2(0.5, 0.5); // 第二片水的中心位置
 uniform vec2 water3_center = vec2(0.5, 0.5); // 第三片水的中心位置
+uniform vec2 water4_center = vec2(0.5, 0.5); // 第四片水的中心位置
 
 // 控制是否显示水管的四个小胳膊
 uniform bool show_left_arm = false;   // 是否显示左边小胳膊
@@ -22,6 +23,7 @@ void fragment() {
     float water_x_start, water_x_end, water_y_start, water_y_end;
     float water2_x_start, water2_x_end, water2_y_start, water2_y_end;
     float water3_x_start, water3_x_end, water3_y_start, water3_y_end;
+    float water4_x_start, water4_x_end, water4_y_start, water4_y_end;
 
     // 计算管子的位置
     pipe_x_start = (1.0 - pipe_size) / 2.0;
@@ -47,6 +49,12 @@ void fragment() {
     water3_y_start = water3_center.y - water_size / 2.0;
     water3_y_end = water3_y_start + water_size;
 
+    // 计算第四片水的位置，基于水4的中心
+    water4_x_start = water4_center.x - water_size / 2.0;
+    water4_x_end = water4_x_start + water_size;
+    water4_y_start = water4_center.y - water_size / 2.0;
+    water4_y_end = water4_y_start + water_size;
+
     // 先判断水1的位置
     if (UV.x >= water_x_start && UV.x <= water_x_end &&
         UV.y >= water_y_start && UV.y <= water_y_end) {
@@ -61,6 +69,11 @@ void fragment() {
     else if (UV.x >= water3_x_start && UV.x <= water3_x_end &&
              UV.y >= water3_y_start && UV.y <= water3_y_end) {
         COLOR = water_color;  // 显示第三片水的颜色
+    }
+    // 然后判断水4的位置
+    else if (UV.x >= water4_x_start && UV.x <= water4_x_end &&
+             UV.y >= water4_y_start && UV.y <= water4_y_end) {
+        COLOR = water_color;  // 显示第四片水的颜色
     }
     // 然后判断管子的位置
     else if (UV.x >= pipe_x_start && UV.x <= pipe_x_end &&
