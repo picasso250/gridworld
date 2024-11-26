@@ -1,20 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://vvd677ncd64d"]
+[gd_scene load_steps=2 format=3 uid="uid://vvd677ncd64d"]
 
-[ext_resource type="Shader" path="res://tube.gdshader" id="1_tr7ln"]
-[ext_resource type="Texture2D" uid="uid://pwt82fq4ilg5" path="res://icon.svg" id="2_ilcso"]
 [ext_resource type="Script" path="res://tube.gd" id="3_kiw3i"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_7ym4q"]
-shader = ExtResource("1_tr7ln")
-shader_parameter/water_color = Vector4(0.5, 0.8, 1, 1)
-shader_parameter/wall_color = Vector4(0.6, 0.5, 0.45, 1)
-shader_parameter/pipe_diameter = 0.4
-shader_parameter/wall_thickness = 0.162
-shader_parameter/pipe_orientation = 0
-shader_parameter/water_speed = 0.7
-shader_parameter/show_wall = false
-
-[node name="Tube" type="Sprite2D"]
-material = SubResource("ShaderMaterial_7ym4q")
-texture = ExtResource("2_ilcso")
+[node name="Tube" type="Node2D"]
 script = ExtResource("3_kiw3i")

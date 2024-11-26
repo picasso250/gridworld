@@ -18,7 +18,7 @@ func _ready():
 
 			# Set the position and scale of the tube
 			tube.position = Vector2(x, y) * cell_size
-			tube.scale = cell_size / Vector2(128, 128)  # Adjust scale based on grid size
+			#tube.scale = cell_size / Vector2(128, 128)  # Adjust scale based on grid size
 			tube.visible = true
 			tube.x = y
 			tube.y = x
