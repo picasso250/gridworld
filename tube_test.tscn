@@ -7,14 +7,14 @@
 script = ExtResource("1_thxnr")
 
 [node name="Tube" parent="." instance=ExtResource("2_oepxk")]
-x = null
-y = null
-cell_width = null
-pipe_width = null
-pipe_thickness = null
+x = 0
+y = 0
+cell_width = 64.0
+pipe_width = 32.0
+pipe_thickness = 4.0
 draw_left_pipe = false
 draw_right_pipe = false
 draw_top_pipe = false
-draw_bottom_pipe = null
-pipe_color = null
-water_color = null
+draw_bottom_pipe = true
+pipe_color = Color(0.545, 0.271, 0.075, 1)
+water_color = Color(0, 0, 1, 1)
