@@ -37,6 +37,7 @@ func _ready():
 	tween = get_tree().create_tween()
 	tween2 = get_tree().create_tween()
 
+
 	# 初始化 Shader 参数
 	material.set_shader_parameter("pipe_size", pipe_width)
 	material.set_shader_parameter("pipe_color", pipe_color)
@@ -49,7 +50,9 @@ func _ready():
 	# 启动动画
 	start_water_tween(tween, "water_pos", water_pos, animation_direction, animation_movement)
 	start_water_tween(tween2, "water2_pos", water2_pos, animation2_direction, animation2_movement)
-
+	
+	#tween2.set_loops()
+	
 
 func start_water_tween(
 	tween: Tween, 
@@ -65,6 +68,14 @@ func start_water_tween(
 
 	# Animate the movement of water
 	tween.tween_property(self, water_property, end_position, animation_duration)
+	tween.set_loops()
+
+	tween.connect("step_finished", _on_tween_completed)
+
+func _on_tween_completed(tween: Tween, key: String):
+	# 动画完成时手动重置位置
+	water_pos = water_pos_init_center if animation_movement == Movement.OUTWARD else get_edge_position(animation_direction)
+	print("well")
 
 func _process(delta):
 	# Update shader parameters for water

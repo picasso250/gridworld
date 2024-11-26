@@ -1,9 +1,17 @@
-[gd_scene load_steps=2 format=3 uid="uid://vvd677ncd64d"]
+[gd_scene load_steps=4 format=3 uid="uid://vvd677ncd64d"]
 
+[ext_resource type="Shader" path="res://tube.gdshader" id="1_tr7ln"]
 [ext_resource type="Script" path="res://tube.gd" id="3_kiw3i"]
 
-[node name="Tube" type="Control"]
-layout_mode = 3
-anchors_preset = 0
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jubco"]
+shader = ExtResource("1_tr7ln")
+
+[node name="Tube" type="ColorRect"]
+material = SubResource("ShaderMaterial_jubco")
+offset_right = 64.0
+offset_bottom = 64.0
 script = ExtResource("3_kiw3i")
 debug = true
+animation_direction = 2
+animation_movement = 1
+animation2_direction = 0
