@@ -1,4 +1,4 @@
-extends Node2D
+extends Control
 
 @export var x: int = 0
 @export var y: int = 0
@@ -21,8 +21,10 @@ var water_pos: Vector2 = Vector2(-water_size / 2, -water_size / 2)  # 水的初�
 var water_target: Vector2 = Vector2(32, 0) # 水的目标位置
 var speed: float = 50 # 水流的速度，每秒移动的像素数
 
-func _draw():
+func _ready():
+	pass
 
+func _draw():
 	if draw_left_pipe:
 		# 绘制左半边的管道
 		draw_rect(Rect2(Vector2(-cell_width / 2, -pipe_width / 2), Vector2(cell_width / 2 + pipe_width / 2, pipe_width)), pipe_color)

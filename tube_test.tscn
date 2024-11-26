@@ -1,12 +1,9 @@
 [gd_scene load_steps=3 format=3 uid="uid://bbqv6vau5vdyf"]
 
 [ext_resource type="Script" path="res://tube_test.gd" id="1_thxnr"]
-[ext_resource type="PackedScene" uid="uid://vvd677ncd64d" path="res://tube.tscn" id="2_oepxk"]
+[ext_resource type="PackedScene" uid="uid://ds2j1wyyxxe2y" path="res://tube_wrap.tscn" id="2_jxy60"]
 
 [node name="TubeTest" type="Node2D"]
 script = ExtResource("1_thxnr")
 
-[node name="Tube" parent="." instance=ExtResource("2_oepxk")]
-draw_top_pipe = false
-draw_bottom_pipe = false
-debug = false
+[node name="TubeWrap" parent="." instance=ExtResource("2_jxy60")]

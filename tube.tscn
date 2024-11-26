@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://tube.gd" id="3_kiw3i"]
 
-[node name="Tube" type="Node2D"]
+[node name="Tube" type="Control"]
+layout_mode = 3
+anchors_preset = 0
 script = ExtResource("3_kiw3i")
 debug = true
