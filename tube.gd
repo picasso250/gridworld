@@ -7,6 +7,8 @@ extends Node2D
 @export var pipe_thickness: float = 4 # 水管壁厚度
 @export var draw_left_pipe: bool = true # 是否画左半边的管道
 @export var draw_right_pipe: bool = true # 是否画右半边的管道
+@export var draw_top_pipe: bool = true # 是否画上半边的管道
+@export var draw_bottom_pipe: bool = true # 是否画下半边的管道
 @export var debug = false # 是否开启调试模式
 
 # 参数化颜色
@@ -23,6 +25,14 @@ func _draw():
 	if draw_right_pipe:
 		# 绘制右半边的管道
 		draw_rect(Rect2(Vector2(-pipe_width / 2, -pipe_width / 2), Vector2(cell_width / 2+pipe_width / 2, pipe_width)), pipe_color)
+
+	if draw_top_pipe:
+		# 绘制上半边的管道
+		draw_rect(Rect2(Vector2(-pipe_width / 2, -cell_width / 2), Vector2(pipe_width, cell_width / 2 + pipe_width / 2)), pipe_color)
+
+	if draw_bottom_pipe:
+		# 绘制下半边的管道
+		draw_rect(Rect2(Vector2(-pipe_width / 2, -pipe_width / 2), Vector2(pipe_width, cell_width / 2 + pipe_width / 2)), pipe_color)
 
 	# 绘制水：考虑管道壁的厚度
 	draw_rect(Rect2(Vector2(-water_size / 2, -water_size / 2), Vector2(water_size, water_size)), water_color)

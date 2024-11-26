@@ -8,3 +8,5 @@ script = ExtResource("1_thxnr")
 
 [node name="Tube" parent="." instance=ExtResource("2_oepxk")]
 draw_left_pipe = false
+draw_right_pipe = false
+draw_top_pipe = false
