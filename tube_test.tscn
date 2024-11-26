@@ -7,4 +7,4 @@
 script = ExtResource("1_thxnr")
 
 [node name="Tube" parent="." instance=ExtResource("2_oepxk")]
-is_horizontal = true
+debug = true
