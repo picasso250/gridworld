@@ -9,7 +9,7 @@ extends Node2D
 var tubes = []
 
 func _ready():
-	var template_tube = $TubeWrap
+	var template_tube = $Tube
 	# Initialize grid data
 	for y in range(grid_size.y):
 		var row = []

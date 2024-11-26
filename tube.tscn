@@ -5,18 +5,14 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_jubco"]
 shader = ExtResource("1_tr7ln")
-shader_parameter/water_color = Vector4(0.5, 0.8, 1, 1)
 shader_parameter/pipe_color = Vector4(0.6, 0.5, 0.45, 1)
-shader_parameter/pipe_size = 0.4
-shader_parameter/water_size = 0.223
-shader_parameter/water_center = Vector2(0.5, 0.5)
-shader_parameter/water2_center = Vector2(0.5, 0.5)
-shader_parameter/water3_center = Vector2(0.5, 0.5)
-shader_parameter/water4_center = Vector2(0.5, 0.5)
-shader_parameter/show_left_arm = true
-shader_parameter/show_right_arm = true
-shader_parameter/show_top_arm = true
-shader_parameter/show_bottom_arm = true
+shader_parameter/radius = 0.3
+shader_parameter/pipe_size = 0.3
+shader_parameter/show_left_arm = false
+shader_parameter/show_right_arm = false
+shader_parameter/show_top_arm = false
+shader_parameter/show_bottom_arm = false
+shader_parameter/show_center_circle = true
 
 [node name="Tube" type="ColorRect"]
 material = SubResource("ShaderMaterial_jubco")

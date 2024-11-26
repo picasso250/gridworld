@@ -11,12 +11,15 @@ uniform bool show_right_arm = false;  // 是否显示右边小胳膊
 uniform bool show_top_arm = false;    // 是否显示上边小胳膊
 uniform bool show_bottom_arm = false; // 是否显示下边小胳膊
 
+// 控制是否显示中间圆点
+uniform bool show_center_circle = true; // 是否显示中间圆点
+
 void fragment() {
     vec2 center = vec2(0.5, 0.5);
     float dist_to_center = distance(UV, center);
 
     // 判断是否在中间圆点内
-    if (dist_to_center <= radius) {
+    if (show_center_circle && dist_to_center <= radius) {
         COLOR = pipe_color;  // 显示圆点的颜色
     }
     // 判断并绘制小胳膊
