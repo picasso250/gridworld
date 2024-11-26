@@ -39,8 +39,8 @@ func _ready():
 
 
 	# 初始化 Shader 参数
-	material.set_shader_parameter("pipe_size", pipe_width)
-	material.set_shader_parameter("pipe_color", pipe_color)
+	#material.set_shader_parameter("pipe_size", pipe_width)
+	#material.set_shader_parameter("pipe_color", pipe_color)
 	material.set_shader_parameter("water_color", water_color)
 
 	# 设置初始水的位置
@@ -50,8 +50,6 @@ func _ready():
 	# 启动动画
 	start_water_tween(tween, "water_pos", water_pos, animation_direction, animation_movement)
 	start_water_tween(tween2, "water2_pos", water2_pos, animation2_direction, animation2_movement)
-	
-	#tween2.set_loops()
 	
 
 func start_water_tween(
