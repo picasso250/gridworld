@@ -1,4 +1,4 @@
-extends Control
+extends ColorRect
 
 enum Direction { RIGHT, UP, LEFT, DOWN }
 enum Movement { OUTWARD, INWARD }
@@ -6,8 +6,7 @@ enum Movement { OUTWARD, INWARD }
 @export var x: int = 0
 @export var y: int = 0
 @export var cell_size: float = 64
-@export var pipe_width: float = 32
-@export var pipe_thickness: float = 4
+@export var pipe_width: float = 0.4
 @export var draw_left_pipe: bool = true
 @export var draw_right_pipe: bool = true
 @export var draw_top_pipe: bool = true
@@ -17,63 +16,46 @@ enum Movement { OUTWARD, INWARD }
 @export var pipe_color: Color = Color(0.2, 0.1, 0.04, 1)
 @export var water_color: Color = Color(0.2, 0.6, 1.0, 1)
 
-var water_size = pipe_width - pipe_thickness * 2
 
-var water_pos: Vector2 = Vector2(0, 0)
-@export var speed: float = 33
+var water_pos_init: Vector2 = Vector2(0.5, 0.5)
+var water_pos: Vector2 = water_pos_init
+@export var speed: float = 0.5  # The speed is now a float between 0 and 1
 @export var animation_direction: Direction = Direction.RIGHT
 @export var animation_movement: Movement = Movement.OUTWARD # Added parameter for inward/outward
 
-
 func _ready():
-	pass
+	# Set initial shader parameters
+	material.set_shader_parameter("pipe_size", pipe_width)
+	#shader_material.set_shader_parameter("water_size", water_size)
+	#shader_material.set_shader_parameter("pipe_color", pipe_color)
+	#shader_material.set_shader_parameter("water_color", water_color)
+	#shader_material.set_shader_parameter("water_pos", water_pos)
 
 func _draw():
-	if draw_left_pipe:
-		# 绘制左半边的管道
-		draw_rect(Rect2(Vector2(-cell_size / 2, -pipe_width / 2), Vector2(cell_size / 2 + pipe_width / 2, pipe_width)), pipe_color)
-
-	if draw_right_pipe:
-		# 绘制右半边的管道
-		draw_rect(Rect2(Vector2(-pipe_width / 2, -pipe_width / 2), Vector2(cell_size / 2 + pipe_width / 2, pipe_width)), pipe_color)
-
-	if draw_top_pipe:
-		# 绘制上半边的管道
-		draw_rect(Rect2(Vector2(-pipe_width / 2, -cell_size / 2), Vector2(pipe_width, cell_size / 2 + pipe_width / 2)), pipe_color)
-
-	if draw_bottom_pipe:
-		# 绘制下半边的管道
-		draw_rect(Rect2(Vector2(-pipe_width / 2, -pipe_width / 2), Vector2(pipe_width, cell_size / 2 + pipe_width / 2)), pipe_color)
-
-	# 绘制水：考虑管道壁的厚度
-	draw_rect(Rect2(water_pos-Vector2(water_size/2,water_size/2), Vector2(water_size, water_size)), water_color)
-
-	if debug:
-		# 绘制调试十字
-		var cross_color: Color = Color(0.8, 0.8, 0.8, 0.1) # 淡灰色
-		draw_rect(Rect2(Vector2(-cell_size / 2, -pipe_width / 2), Vector2(cell_size, pipe_width)), cross_color)
-		draw_rect(Rect2(Vector2(-pipe_width / 2, -cell_size / 2), Vector2(pipe_width, cell_size)), cross_color)
+	# We don't need to draw anything manually here anymore
+	pass
 
 func _process(delta):
+	# Calculate the direction vector
 	var direction_vector = get_direction_vector(animation_direction, animation_movement)
+	
+	# Adjust water position based on speed (directly moving within 0-1 range)
 	water_pos += direction_vector * speed * delta
 
-	# Check boundaries and reset if needed.  Logic depends on movement type.
+	# Check if the water has reached the boundary (0 to 1 range)
 	if animation_movement == Movement.OUTWARD:
-		if abs(water_pos.x) > cell_size / 2 or abs(water_pos.y) > cell_size / 2:
-			water_pos = Vector2(0, 0)
-	else: #INWARD
-		if water_pos.distance_to(Vector2.ZERO) < 1: #Check if close enough to center
-			water_pos = get_edge_position(animation_direction)
+		if abs(water_pos.x) > 1 or abs(water_pos.y) > 1:
+			water_pos = water_pos_init  # Reset to center if out of bounds
+	else: # INWARD
+		if water_pos.x < 0.05 and water_pos.y < 0.05:  # Close enough to center
+			water_pos = water_pos_init
 
-
-	queue_redraw()
-
+	# Update water position in shader (no need to normalize, it's already 0-1)
+	material.set_shader_parameter("water_center", water_pos)
 
 func get_direction_vector(direction: Direction, movement: Movement):
 	var base_vector = get_base_vector(direction)
-	return base_vector * ( 1 if movement == Movement.OUTWARD else -1)
-
+	return base_vector * (1 if movement == Movement.OUTWARD else -1)
 
 func get_base_vector(direction: Direction):
 	match direction:
@@ -89,9 +71,11 @@ func get_base_vector(direction: Direction):
 			return Vector2(0, 0)
 
 func get_edge_position(direction: Direction):
+	# Since the water_pos is already in range 0-1, this function might not be needed
+	# unless it's for resetting or handling specific edge scenarios.
 	match direction:
-		Direction.RIGHT: return Vector2(cell_size/2,0)
-		Direction.UP: return Vector2(0,-cell_size/2)
-		Direction.LEFT: return Vector2(-cell_size/2,0)
-		Direction.DOWN: return Vector2(0,cell_size/2)
-		_: return Vector2(0,0)
+		Direction.RIGHT: return Vector2(1, 0)
+		Direction.UP: return Vector2(0, -1)
+		Direction.LEFT: return Vector2(-1, 0)
+		Direction.DOWN: return Vector2(0, 1)
+		_: return Vector2(0, 0)
