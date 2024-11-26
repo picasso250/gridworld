@@ -17,8 +17,8 @@ enum Movement { OUTWARD, INWARD }
 @export var water_color: Color = Color(0.2, 0.6, 1.0, 1)
 
 
-var water_pos_init: Vector2 = Vector2(0.5, 0.5)
-var water_pos: Vector2 = water_pos_init
+var water_pos_init_center: Vector2 = Vector2(0.5, 0.5)
+var water_pos: Vector2 = water_pos_init_center
 @export var speed: float = 0.5  # The speed is now a float between 0 and 1
 @export var animation_direction: Direction = Direction.RIGHT
 @export var animation_movement: Movement = Movement.OUTWARD # Added parameter for inward/outward
@@ -27,9 +27,13 @@ func _ready():
 	# Set initial shader parameters
 	material.set_shader_parameter("pipe_size", pipe_width)
 	#shader_material.set_shader_parameter("water_size", water_size)
-	#shader_material.set_shader_parameter("pipe_color", pipe_color)
-	#shader_material.set_shader_parameter("water_color", water_color)
-	#shader_material.set_shader_parameter("water_pos", water_pos)
+	material.set_shader_parameter("pipe_color", pipe_color)
+	material.set_shader_parameter("water_color", water_color)
+	
+	if animation_movement == Movement.OUTWARD:
+		water_pos = water_pos_init_center
+	else: # INWARD
+		water_pos = get_edge_position(animation_direction)
 
 func _draw():
 	# We don't need to draw anything manually here anymore
@@ -44,11 +48,11 @@ func _process(delta):
 
 	# Check if the water has reached the boundary (0 to 1 range)
 	if animation_movement == Movement.OUTWARD:
-		if abs(water_pos.x) > 1 or abs(water_pos.y) > 1:
-			water_pos = water_pos_init  # Reset to center if out of bounds
+		if water_pos.x > 1 or water_pos.y > 1 or water_pos.x < 0 or water_pos.y < 0:
+			water_pos = water_pos_init_center  # Reset to center if out of bounds
 	else: # INWARD
-		if water_pos.x < 0.05 and water_pos.y < 0.05:  # Close enough to center
-			water_pos = water_pos_init
+		if abs(water_pos.x) < 0.05 and abs(water_pos.y) < 0.05:  # Close enough to center
+			water_pos = get_edge_position(animation_direction)
 
 	# Update water position in shader (no need to normalize, it's already 0-1)
 	material.set_shader_parameter("water_center", water_pos)
@@ -74,8 +78,8 @@ func get_edge_position(direction: Direction):
 	# Since the water_pos is already in range 0-1, this function might not be needed
 	# unless it's for resetting or handling specific edge scenarios.
 	match direction:
-		Direction.RIGHT: return Vector2(1, 0)
-		Direction.UP: return Vector2(0, -1)
-		Direction.LEFT: return Vector2(-1, 0)
-		Direction.DOWN: return Vector2(0, 1)
+		Direction.RIGHT: return Vector2(1, 0.5)
+		Direction.UP: return Vector2(0.5, -1)
+		Direction.LEFT: return Vector2(-1, 0.5)
+		Direction.DOWN: return Vector2(0.5, 1)
 		_: return Vector2(0, 0)
