@@ -7,4 +7,3 @@
 script = ExtResource("1_thxnr")
 
 [node name="Tube" parent="." instance=ExtResource("2_oepxk")]
-debug = true

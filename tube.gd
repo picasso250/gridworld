@@ -15,23 +15,22 @@ extends Node2D
 func _draw():
 	var water_size = pipe_width-pipe_thickness*2
 	if is_horizontal:
-		# 绘制水平管壁
-		draw_rect(Rect2(Vector2(0, 0), Vector2(cell_width, pipe_width)), pipe_color)
-
+		# 将矩形的中心点对齐到 (0, 0)
+		draw_rect(Rect2(Vector2(-cell_width / 2, -pipe_width / 2), Vector2(cell_width, pipe_width)), pipe_color)
 	else:
-		# 绘制竖直管壁
-		draw_rect(Rect2(Vector2(0, 0), Vector2(pipe_width, cell_width)), pipe_color)
+		# 将竖直管壁的中心点对齐到 (0, 0)
+		draw_rect(Rect2(Vector2(-pipe_width / 2, -cell_width / 2), Vector2(pipe_width, cell_width)), pipe_color)
+
 
 	# 绘制水
-	draw_rect(Rect2(Vector2(pipe_thickness, pipe_thickness), Vector2(water_size, water_size)), water_color)
+	draw_rect(Rect2(Vector2(-water_size / 2, -water_size / 2), Vector2(water_size, water_size)), water_color)
+
 
 	if debug:
 		# 绘制调试十字
 		var cross_color = Color(0.8, 0.8, 0.8, 0.5) # 淡灰色
-		# 水平线
-		draw_rect(Rect2(Vector2(0, 0), Vector2(cell_width, pipe_width)), cross_color)
-		# 竖直线
-		draw_rect(Rect2(Vector2(0, 0), Vector2(pipe_width, cell_width)), cross_color)
+		draw_rect(Rect2(Vector2(-cell_width / 2, -pipe_width / 2), Vector2(cell_width, pipe_width)), cross_color)
+		draw_rect(Rect2(Vector2(-pipe_width / 2, -cell_width / 2), Vector2(pipe_width, cell_width)), cross_color)
 
 func _ready():
 	pass

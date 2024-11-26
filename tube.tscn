@@ -4,4 +4,4 @@
 
 [node name="Tube" type="Node2D"]
 script = ExtResource("3_kiw3i")
-is_horizontal = false
+debug = true
