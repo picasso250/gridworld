@@ -50,9 +50,12 @@ func _draw():
 
 func _process(delta):
 	# 水的移动：每一帧根据速度更新水的水平位置
-	var direction = Vector2(1,0)
+	var direction = Vector2(1, 0)
 	water_pos += direction * speed * delta
-	queue_redraw()
-
-
 	
+	# 检查水的位置是否超出管道左边界
+	if water_pos.x > cell_width / 2: 
+		# 水流回起始位置
+		water_pos.x = -water_size / 2
+	
+	queue_redraw()
